@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@id/home">
+    <fragment
+        android:id="@+id/home"
+        android:name="com.do_it.homeFragment"
+        android:label="홈"
+        tools:layout="@layout/fragment_home" />
+    <fragment
+        android:id="@+id/quest"
+        android:name="com.do_it.mapFragment"
+        android:label="탐색"
+        tools:layout="@layout/fragment_map" />
+    <fragment
+        android:id="@+id/my"
+        android:name="com.do_it.mypageFragment"
+        android:label="마이페이지"
+        tools:layout="@layout/fragment_mypage" />
+</navigation>
