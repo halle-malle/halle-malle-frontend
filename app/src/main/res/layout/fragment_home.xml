@@ -14,23 +14,18 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="15dp"
+            android:layout_marginHorizontal="15dp"
             android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/textView3"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="해볼까?님, 참여 예정 모임 N개" />
 
             <TextView
                 android:id="@+id/textView4"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="10dp"
                 android:text="다가오는 일정"
                 android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:textColor="@color/black" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvUpcoming"
@@ -45,7 +40,8 @@
                 android:layout_marginTop="20dp"
                 android:text="참여 중인 모임(N)"
                 android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:textColor="@color/black" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvJoined"
@@ -61,7 +57,8 @@
                 android:layout_marginTop="20dp"
                 android:text="내가 연 모임(N)"
                 android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:textColor="@color/black" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvCreated"
