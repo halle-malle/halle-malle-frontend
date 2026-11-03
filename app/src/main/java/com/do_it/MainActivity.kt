@@ -21,6 +21,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setSupportActionBar(binding.toolbar4)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
 
         val navView = binding.navView
 
@@ -48,5 +49,6 @@ class MainActivity : AppCompatActivity() {
         binding.btnNotification.setOnClickListener {
             Toast.makeText(this, "알림 클릭", Toast.LENGTH_SHORT).show()
         }
+
     }
 }
