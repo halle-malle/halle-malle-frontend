@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
+    android:layout_marginTop="10dp"
     android:background="@drawable/bg_card"
     android:orientation="horizontal"
     android:gravity="center_vertical"
@@ -26,7 +26,7 @@
             android:layout_height="wrap_content"
             android:text="코딩 스터디 할래? 💻"
             android:textColor="#222222"
-            android:textSize="15sp"
+            android:textSize="14sp"
             android:textStyle="bold" />
 
         <TextView
@@ -36,7 +36,7 @@
             android:layout_marginTop="4dp"
             android:text="10.25 (일) 19:00 | 동양미래대학교 도서관"
             android:textColor="#777777"
-            android:textSize="13sp" />
+            android:textSize="12sp" />
 
     </LinearLayout>
 
