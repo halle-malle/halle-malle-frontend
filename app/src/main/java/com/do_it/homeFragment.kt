@@ -1,59 +1,75 @@
 package com.do_it
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.do_it.databinding.FragmentHomeBinding
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [homeFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class homeFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private var _binding: FragmentHomeBinding? = null
+    private val binding get() = _binding!!
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_home, container, false)
+    ): View {
+
+        _binding = FragmentHomeBinding.inflate(inflater, container, false)
+
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment homeFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            homeFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?
+    ) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val joinedList = listOf(
+            CardData(
+                "코딩 스터디 할래? 💻",
+                "10.25 (일) 19:00 | 동양미래대학교 도서관",
+                "참여 중"
+            ),
+            CardData(
+                "고척 돈까스 뿌실래?",
+                "10.26 (월) 12:00 | 고척동 돈까스집",
+                "참여 중"
+            ),
+            CardData(
+                "보드게임 할래?",
+                "10.28 (수) 18:00 | 학생회관 2층",
+                "참여 중"
+        )
+        )
+
+        val createdList = listOf(
+            CardData(
+                "러닝 할래?",
+                "10.24 (토) 07:00 | 안양천 산책로",
+                "멤버 3/8명"
+            )
+        )
+
+
+
+        binding.rvJoined.layoutManager =
+            LinearLayoutManager(requireContext())
+        binding.rvJoined.adapter = CardAdapter(joinedList)
+
+        binding.rvCreated.layoutManager =
+            LinearLayoutManager(requireContext())
+        binding.rvCreated.adapter = CardAdapter(createdList)
+    }
+
+    // Fragment 화면 제거 시 바인딩 해제
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }
