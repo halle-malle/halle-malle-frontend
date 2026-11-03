@@ -7,16 +7,16 @@
     <fragment
         android:id="@+id/home"
         android:name= "com.do_it.homeFragment"
-        android:label="@string/title"
+        android:label="@string/title_home"
         tools:layout="@layout/fragment_home" />
     <fragment
         android:id="@+id/quest"
         android:name="com.do_it.mapFragment"
-        android:label="@string/title"
+        android:label="@string/title_quest"
         tools:layout="@layout/fragment_map" />
     <fragment
         android:id="@+id/my"
         android:name="com.do_it.mypageFragment"
-        android:label="@string/title"
+        android:label="@string/title_MY"
         tools:layout="@layout/fragment_mypage" />
 </navigation>
