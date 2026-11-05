@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.PagerSnapHelper
 import com.do_it.databinding.FragmentHomeBinding
 
 class homeFragment : Fragment() {
@@ -61,7 +62,15 @@ class homeFragment : Fragment() {
                 date = "10.25 (일) 19:00",
                 place = "동양미래대학교 도서관",
                 status = 0,
+            ),
+            cardData(
+                id= 1,
+                title = "코딩 스터디 할래? 💻",
+                date = "10.25 (일) 19:00",
+                place = "동양미래대학교 도서관",
+                status = 0,
             )
+
         )
 
         val createdList = listOf(
@@ -83,6 +92,7 @@ class homeFragment : Fragment() {
                 LinearLayoutManager.HORIZONTAL,
                 false)
         binding.rvUpcoming.adapter = upcomingListAdapter(upcomingList)
+        PagerSnapHelper().attachToRecyclerView(binding.rvUpcoming)
 
         binding.rvJoined.layoutManager =
             LinearLayoutManager(requireContext())
