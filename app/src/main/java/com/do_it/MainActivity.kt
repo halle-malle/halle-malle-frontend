@@ -49,6 +49,5 @@ class MainActivity : AppCompatActivity() {
         binding.btnNotification.setOnClickListener {
             Toast.makeText(this, "알림 클릭", Toast.LENGTH_SHORT).show()
         }
-
     }
 }
