@@ -13,7 +13,8 @@ class itemViewHolder(
 }
 
 class listAdapter(
-    private val list: List<cardData>
+    private val list: List<cardData>,
+    private val onItemClick: (cardData) -> Unit
 ) : RecyclerView.Adapter<itemViewHolder>() {
 
 
@@ -45,6 +46,9 @@ class listAdapter(
                 cardData.STATUS_JOINED -> "참여중"
                 cardData.STATUS_WAITING -> "다가오는 일정"
                 else -> "에러"
+        }
+        holder.itemView.setOnClickListener{
+            onItemClick(item)
         }
     }
 
