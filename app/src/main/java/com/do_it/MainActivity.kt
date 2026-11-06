@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity() {
         binding.btnSettings.setOnClickListener {
             val modal = ModalBottomSheetFragment()
             modal.setStyle(DialogFragment.STYLE_NORMAL, R.style.AppBottomSheetDialogBorder20WhiteTheme)
-
+            
             modal.show(supportFragmentManager, "settings")
 
         }
