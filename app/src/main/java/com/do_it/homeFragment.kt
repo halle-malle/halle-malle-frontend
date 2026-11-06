@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
@@ -96,11 +97,16 @@ class homeFragment : Fragment() {
 
         binding.rvJoined.layoutManager =
             LinearLayoutManager(requireContext())
-        binding.rvJoined.adapter = listAdapter(joinedList)
+        binding.rvJoined.adapter = listAdapter(joinedList){ item->
+            Toast.makeText(context,"참여 중인 모임 : ${item.title}",Toast.LENGTH_LONG).show()
+        }
 
         binding.rvCreated.layoutManager =
             LinearLayoutManager(requireContext())
-        binding.rvCreated.adapter = listAdapter(createdList)
+        binding.rvCreated.adapter = listAdapter(createdList){item ->
+            Toast.makeText(context,"내가 연 모임 : ${item.title}",Toast.LENGTH_LONG).show()
+        }
+
     }
 
     // Fragment 화면 제거 시 바인딩 해제

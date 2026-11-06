@@ -1,4 +1,3 @@
-
 package com.do_it
 
 import android.os.Bundle
@@ -21,6 +20,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setSupportActionBar(binding.toolbar4)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
 
         val navView = binding.navView
 
