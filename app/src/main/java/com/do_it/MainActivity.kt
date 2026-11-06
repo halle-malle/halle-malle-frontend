@@ -1,4 +1,3 @@
-
 package com.do_it
 
 import android.os.Bundle
