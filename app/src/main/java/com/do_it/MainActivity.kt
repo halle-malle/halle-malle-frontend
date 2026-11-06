@@ -3,6 +3,7 @@ package com.do_it
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.DialogFragment
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -47,6 +48,14 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnNotification.setOnClickListener {
             Toast.makeText(this, "알림 클릭", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.btnSettings.setOnClickListener {
+            val modal = ModalBottomSheetFragment()
+            modal.setStyle(DialogFragment.STYLE_NORMAL, R.style.AppBottomSheetDialogBorder20WhiteTheme)
+
+            modal.show(supportFragmentManager, "settings")
+
         }
     }
 }
