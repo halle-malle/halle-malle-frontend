@@ -68,18 +68,7 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-        binding.composeView.setContent {
 
-
-            ModalBottomSheet(onDismissRequest = { /* 바텀 시트가 Dismiss된 경우 호출 */ }) {
-                // Sheet content
-            }
-
-            binding.btnSettings.setOnClickListener {
-
-
-            }
-        }
 
         binding.composeView.setContent {
             val sheetState = rememberModalBottomSheetState()
