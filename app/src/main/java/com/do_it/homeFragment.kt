@@ -89,7 +89,10 @@ class homeFragment : Fragment() {
                 requireContext(),
                 LinearLayoutManager.HORIZONTAL,
                 false)
-        binding.rvUpcoming.adapter = upcomingListAdapter(upcomingList)
+        binding.rvUpcoming.adapter = upcomingListAdapter(upcomingList,
+            { item -> Toast.makeText(context,"그룹 채팅 추가",Toast.LENGTH_SHORT).show()},
+            { item -> Toast.makeText(context,"모임 상세",Toast.LENGTH_SHORT).show()}
+        )
         PagerSnapHelper().attachToRecyclerView(binding.rvUpcoming)
 
         binding.rvJoined.layoutManager =
