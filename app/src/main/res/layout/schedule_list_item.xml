@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="10dp"
+    android:background="@drawable/bg_status_card_white"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:minHeight="60dp"
+    android:padding="12dp">
+
+    <!-- 왼쪽: 모임 정보 -->
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="코딩 스터디 할래? 💻"
+            android:textColor="#222222"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="10.25 (일) 19:00 | 동양미래대학교 도서관"
+            android:textColor="#777777"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+
+    <!-- 오른쪽: 참여 상태 -->
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/bg_button_site"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="6dp"
+        android:text="참여 중"
+        android:textColor="#FFFFFF"
+        android:textSize="11sp"
+        android:textStyle="bold" />
+
+</LinearLayout>
