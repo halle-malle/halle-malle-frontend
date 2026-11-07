@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("com.google.gms.google-services")
-    alias(libs.plugins.compose.compiler)
 }
 
 android {
@@ -37,7 +36,6 @@ android {
     }
     buildFeatures {
         viewBinding = true
-        compose = true
     }
 }
 
@@ -59,7 +57,4 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    val composeBom = platform("androidx.compose:compose-bom:2026.06.01")
-    implementation(composeBom)
-    implementation("androidx.compose.material3:material3")
 }
