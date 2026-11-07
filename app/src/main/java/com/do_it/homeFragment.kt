@@ -12,17 +12,14 @@ import com.do_it.databinding.FragmentHomeBinding
 
 class homeFragment : Fragment() {
 
-    private var _binding: FragmentHomeBinding? = null
-    private val binding get() = _binding!!
+    private lateinit var binding: FragmentHomeBinding
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
-        _binding = FragmentHomeBinding.inflate(inflater, container, false)
-
+        binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -109,9 +106,4 @@ class homeFragment : Fragment() {
 
     }
 
-    // Fragment 화면 제거 시 바인딩 해제
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
 }
