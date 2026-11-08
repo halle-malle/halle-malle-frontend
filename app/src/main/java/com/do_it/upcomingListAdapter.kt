@@ -13,7 +13,10 @@ class upcomingItemViewHolder(
 }
 
 class upcomingListAdapter (
-    private val list: List<cardData>
+    private val list: List<cardData>,
+    private val onItemClickChat: (cardData) -> Unit,
+    private val onItemClickDetail: (cardData) -> Unit
+
 ) : RecyclerView.Adapter<upcomingItemViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): upcomingItemViewHolder {
@@ -37,7 +40,12 @@ class upcomingListAdapter (
         holder.binding.tvNotice.text = "멤버 ${item.memberCount}/${item.maxMember} 공지:${item.notice}"
         holder.binding.btnChat.text = "그룹 채팅·새 메시지 ${item.newMessage}"
         holder.binding.btnDetail.text = "모임 상세"
-
+        holder.binding.btnChat.setOnClickListener {
+            onItemClickChat(item)
+        }
+        holder.binding.btnDetail.setOnClickListener{
+            onItemClickDetail(item)
+        }
     }
 
     override fun getItemCount(): Int {
