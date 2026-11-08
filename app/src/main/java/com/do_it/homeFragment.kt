@@ -1,5 +1,6 @@
 package com.do_it
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -91,7 +92,10 @@ class homeFragment : Fragment() {
                 false)
         binding.rvUpcoming.adapter = upcomingListAdapter(upcomingList,
             { item -> Toast.makeText(context,"그룹 채팅 추가",Toast.LENGTH_SHORT).show()},
-            { item -> Toast.makeText(context,"모임 상세",Toast.LENGTH_SHORT).show()}
+            { item ->
+                val intent: Intent = Intent(requireContext(), GroupDetailActivity::class.java)
+                startActivity(intent)
+            }
         )
         PagerSnapHelper().attachToRecyclerView(binding.rvUpcoming)
 
