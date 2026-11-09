@@ -1,12 +1,15 @@
 package com.do_it
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.do_it.databinding.ActivityGroupChatBinding
 import com.do_it.databinding.ActivityGroupDetailBinding
 import com.do_it.databinding.ActivityMainBinding
 import com.do_it.databinding.FragmentMypageBinding
@@ -28,6 +31,10 @@ class GroupDetailActivity : AppCompatActivity() {
             finish()
         }
 
+        binding.btnGroupChat.setOnClickListener {
+            val intent: Intent = Intent(this, GroupChatActivity::class.java)
+            startActivity(intent)
+        }
         var item = listOf(
             memberData (
                 name = "홍길동",
