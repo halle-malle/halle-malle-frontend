@@ -11,7 +11,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        android:theme="@style/Theme.Hallemalle">
         <activity
             android:name=".GroupChatActivity"
             android:exported="false" />
@@ -22,9 +22,7 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyDu4ZrWAQXuL7MbIaizNklNw5bmA7S8DCk" />
-        <activity
-            android:name=".GroupDetailActivity"
-            android:exported="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="false" />
