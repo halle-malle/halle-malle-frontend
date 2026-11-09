@@ -1,5 +1,6 @@
 package com.do_it
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -34,6 +35,12 @@ class mapFragment : Fragment(), OnMapReadyCallback {
         val mapFragment = childFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        // 모임 만들기 화면으로 이동
+        binding.createMeeting.setOnClickListener {
+            val intent = Intent(requireContext(), CreateMeetingActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
