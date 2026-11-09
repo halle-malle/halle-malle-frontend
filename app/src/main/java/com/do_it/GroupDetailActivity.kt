@@ -9,6 +9,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.do_it.databinding.ActivityGroupChatBinding
 import com.do_it.databinding.ActivityGroupDetailBinding
 import com.do_it.databinding.ActivityMainBinding
 import com.do_it.databinding.FragmentMypageBinding
@@ -31,7 +32,7 @@ class GroupDetailActivity : AppCompatActivity() {
         }
 
         binding.btnGroupChat.setOnClickListener {
-            val intent: Intent = Intent(this, ::class.java)
+            val intent: Intent = Intent(this, GroupChatActivity::class.java)
             startActivity(intent)
         }
         var item = listOf(
