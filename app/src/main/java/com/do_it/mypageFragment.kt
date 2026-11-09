@@ -30,20 +30,21 @@ class mypageFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.menuFriends.setOnClickListener{ //친구탭 클릭시 '친구 클릭' 이라는 토스트창이 나옴
+        //친구탭 클릭 이벤트
+        binding.menuFriends.setOnClickListener{
             findNavController().navigate(R.id.action_my_to_friendFragment)
         }
         //내가 연 모임 관리 탭 클릭 이벤트
         binding.menuCreatedMeetups.setOnClickListener {
-            toast("내가 연 모임 관리")
+            findNavController().navigate(R.id.action_my_to_group_ManagementFragment)
         }
         //지난 모임탭 클릭 이벤트
         binding.menuPastMeetups.setOnClickListener {
-            toast("지난 모임")
+            findNavController().navigate(R.id.action_my_to_previous_meetingFragment)
         }
         // 알림 설정 클릭 이벤트
         binding.menuNotificationSettings.setOnClickListener {
-            toast("알림 설정")
+            findNavController().navigate(R.id.action_my_to_notification_SettingsFragment)
         }
 
         // 로그아웃 버튼
