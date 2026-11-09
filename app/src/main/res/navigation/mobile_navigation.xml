@@ -18,5 +18,14 @@
         android:id="@+id/my"
         android:name="com.do_it.mypageFragment"
         android:label="마이페이지"
-        tools:layout="@layout/fragment_mypage" />
+        tools:layout="@layout/fragment_mypage" >
+        <action
+            android:id="@+id/action_my_to_friendFragment"
+            app:destination="@id/friendFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/friendFragment"
+        android:name="com.do_it.FriendFragment"
+        android:label="친구"
+        tools:layout="@layout/fragment_friend" />
 </navigation>
