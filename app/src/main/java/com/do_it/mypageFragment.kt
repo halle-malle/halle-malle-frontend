@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.do_it.MyApplication.Companion.auth
 import com.do_it.databinding.ActivityLoginBinding
 import com.do_it.databinding.ActivityMainBinding
@@ -30,7 +31,7 @@ class mypageFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.menuFriends.setOnClickListener{ //친구탭 클릭시 '친구 클릭' 이라는 토스트창이 나옴
-            toast("친구 클릭")
+            findNavController().navigate(R.id.action_my_to_friendFragment)
         }
         //내가 연 모임 관리 탭 클릭 이벤트
         binding.menuCreatedMeetups.setOnClickListener {
