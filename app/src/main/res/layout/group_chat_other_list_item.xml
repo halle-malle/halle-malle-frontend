@@ -12,10 +12,11 @@
         >
 
         <ImageView
-            android:background="@drawable/bg_avatar"
             android:id="@+id/imageView"
             android:layout_width="41dp"
             android:layout_height="45dp"
+            android:layout_marginRight="5dp"
+            android:background="@drawable/bg_avatar"
             app:srcCompat="@drawable/ic_person" />
 
         <LinearLayout
@@ -35,6 +36,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_marginTop="2dp"
                 android:orientation="horizontal">
 
                 <TextView
@@ -43,6 +45,7 @@
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_status_card_white"
                     android:padding="10dp"
+                    android:layout_marginRight="3dp"
                     android:text="안녕하세요 홍길동입니다~~"
                     android:textColor="@color/black"
                     android:textSize="14sp" />
