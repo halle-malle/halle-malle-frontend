@@ -30,22 +30,22 @@ class GroupChatActivity : AppCompatActivity() {
             chatData(
                 name = "홍길동",
                 content = "안녕하세요 홍길동입니다~~",
-                time = "오후 2:32",
-                type = chatData.TYPE_OTHER
+                createdAt = System.currentTimeMillis(),
+                senderId = "user1"
             ),
             chatData(
                 name = "이영희",
                 content = "반가워요!",
-                time = "오후 2:32",
-                type = chatData.TYPE_OTHER
+                createdAt = System.currentTimeMillis(),
+                senderId = "user2"
             ),
             chatData(
                 content = "안녕하세요 저는 김철수입니다.",
-                time = "오후 2:33",
-                type = chatData.TYPE_MINE
+                createdAt = System.currentTimeMillis(),
+                senderId = "me"
             )
         )
-        val adapter = GroupChatAdapter(chatList)
+        val adapter = GroupChatAdapter(chatList, "me")
 
         binding.rvChat.scrollToPosition(chatList.size - 1)
 
@@ -55,8 +55,8 @@ class GroupChatActivity : AppCompatActivity() {
 
                 chatList.add(chatData(
                     content = binding.editTextText.text.toString().trim(),
-                    time = "오후 2:33",
-                    type = chatData.TYPE_MINE
+                    createdAt = System.currentTimeMillis(),
+                    senderId= "me"
                 ))
                 adapter.notifyDataSetChanged()
                 binding.editTextText.setText("")

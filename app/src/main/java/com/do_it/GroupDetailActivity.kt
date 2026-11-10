@@ -38,12 +38,12 @@ class GroupDetailActivity : AppCompatActivity() {
         var item = listOf(
             memberData (
                 name = "홍길동",
-                isHost = "방장",
+                role = 0,
                 intro = "안녕하세요 잘 부탁드릴게요~"
             ),
             memberData (
                 name = "김수한",
-                isHost = "방장 아님",
+                role = 1,
                 intro = "안녕하세요 잘 부탁드릴게요~"
             )
         )

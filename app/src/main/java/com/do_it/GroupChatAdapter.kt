@@ -1,5 +1,6 @@
 package com.do_it
 
+import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -15,12 +16,14 @@ class ChatOtherViewHolder(val binding: GroupChatOtherListItemBinding) :
     RecyclerView.ViewHolder(binding.root)
 
 class GroupChatAdapter(
-    private val chatList: List<chatData>
+    private val chatList: List<chatData>,
+    val myId:String = ""
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     //상대방 채팅인지 나의 채팅인지 확인 position의 아이템은 어떤 모양의 뷰로 보여줘야되는지
     override fun getItemViewType(position: Int): Int {
-        return chatList[position].type
+        if(chatList[position].senderId == myId) return chatData.TYPE_MINE
+        else return chatData.TYPE_OTHER
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -38,12 +41,12 @@ class GroupChatAdapter(
         when (holder) {
             is ChatMineViewHolder -> {
                 holder.binding.tvMyContent.text = item.content
-                holder.binding.tvTime.text = item.time
+                holder.binding.tvTime.text = DateFormat.format("a h:mm", item.createdAt)
             }
             is ChatOtherViewHolder -> {
                 holder.binding.tvName.text = item.name
                 holder.binding.tvOtherContent.text = item.content
-                holder.binding.tvTime.text = item.time
+                holder.binding.tvTime.text = DateFormat.format("a h:mm", item.createdAt)
             }
         }
     }

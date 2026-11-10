@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.do_it.databinding.ScheduleListItemBinding
+import android.text.format.DateFormat
 
 
 class itemViewHolder(
@@ -13,8 +14,8 @@ class itemViewHolder(
 }
 
 class listAdapter(
-    private val list: List<cardData>,
-    private val onItemClick: (cardData) -> Unit
+    private val list: List<GroupData>,
+    private val onItemClick: (GroupData) -> Unit
 ) : RecyclerView.Adapter<itemViewHolder>() {
 
 
@@ -40,11 +41,10 @@ class listAdapter(
         val item = list[position]
 
         holder.binding.tvTitle.text = item.title
-        holder.binding.tvInfo.text = "${item.date} | ${item.place}"
+        holder.binding.tvInfo.text = "${DateFormat.format("MM.dd (E) HH:mm", item.dateTime)} | ${item.place}"
         holder.binding.tvStatus.text = when(item.status) {
-                cardData.STATUS_HOST -> "멤버 ${item.memberCount}/${item.maxMember}명"
-                cardData.STATUS_JOINED -> "참여중"
-                cardData.STATUS_WAITING -> "다가오는 일정"
+                GroupData.STATUS_RECRUITING -> "모집 중"
+                GroupData.STATUS_CONFIRMED -> "확정"
                 else -> "에러"
         }
         holder.itemView.setOnClickListener{

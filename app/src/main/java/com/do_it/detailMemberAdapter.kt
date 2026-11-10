@@ -9,7 +9,6 @@ import com.do_it.databinding.UpcomingScheduleItemBinding
 
 class detailMemberViewHolder(
     val binding:GroupDetailMemberListItemBinding
-
 ) : RecyclerView.ViewHolder(binding.root) {
 
 }
@@ -36,7 +35,18 @@ class detailMemberAdapter (
 
         holder.binding.tvName.text = item.name
         holder.binding.tvIntro.text = item.intro
-        holder.binding.tvType.text = item.isHost
+        holder.binding.tvType.text = when(item.status) {
+            memberData.STATUS_WAITING -> "대기중"
+            memberData.STATUS_JOINED  -> when(item.role) {
+                memberData.ROLE_HOST -> "방장"
+                memberData.ROLE_MEMBER -> "멤버"
+                else -> "멤버"
+            }
+            else -> "오류"
+        }
+
+
+
 
     }
 
