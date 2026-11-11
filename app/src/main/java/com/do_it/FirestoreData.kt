@@ -30,6 +30,7 @@ data class memberData (
 
 data class GroupData(
     val id: String = "",
+    val memberIds: List<String> = listOf(), // 참가한 멤버들
     val hostId: String = "",          // 방장 uid
     val title: String = "",
     val category: String = "",        // 운동, 맛집, 스터디...

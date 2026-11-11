@@ -17,6 +17,7 @@ class CreateMeetingActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
     private lateinit var binding: ActivityCreateMeetingBinding
+    private var selectedLatLng: LatLng? = null   // 지도에서 찍은 위치
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,30 +40,75 @@ class CreateMeetingActivity : AppCompatActivity(), OnMapReadyCallback {
             finish()
         }
 
+        binding.mapTouchBlocker.setOnTouchListener { v, event ->
+            binding.scrollView.requestDisallowInterceptTouchEvent(true)   // 지도 만지는 동안 스크롤 금지
+            false   // 터치는 아래 지도로 넘기기
+        }
+
         // 지도에 핀 찍기 버튼
         binding.btnPin.setOnClickListener {
             val title = binding.etMeetingTitle.text.toString()
             if (title.isEmpty()) {
                 Toast.makeText(baseContext, "모임 이름을 입력해주세요.", Toast.LENGTH_LONG).show()
             } else {
-                Toast.makeText(baseContext, "모임이 생성되었습니다!", Toast.LENGTH_SHORT).show()
-                finish()
+                val uid = MyApplication.auth.currentUser?.uid ?:
+                return@setOnClickListener
+                val latLng = selectedLatLng
+                if (latLng == null) {
+                    Toast.makeText(baseContext, "지도에 핀을 찍어주세요.", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                val ref = MyApplication.db.collection("groups").document()
+
+                val group = GroupData(
+                    id = ref.id,
+                    memberIds = listOf(uid),
+                    hostId = uid,
+                    title = title,
+                    description = binding.etDetail.text.toString(),
+                    maxMember = binding.seekBarMember.progress,
+                    memberCount = 1,
+                    createdAt = System.currentTimeMillis(),
+                    latitude = latLng.latitude,
+                    longitude = latLng.longitude,
+                )
+
+                ref.set(group).addOnSuccessListener {
+                    ref.collection("members").document(uid).set(memberData(
+                        meetingId = ref.id,
+                        userId = uid,
+                        role = memberData.ROLE_HOST,
+                        joinedAt = System.currentTimeMillis()
+                        )
+                    )
+                    Toast.makeText(baseContext, "모임이 생성되었습니다!", Toast.LENGTH_SHORT).show()
+                    finish()
+                }.addOnFailureListener {
+                    Toast.makeText(baseContext, "모임 생성 실패", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
+
         mMap = googleMap
 
+        // 처음 보여줄 위치 (동양미래대 8호관)
         val location = LatLng(37.5000, 126.8663)
-        val options = MarkerOptions()
-        options.position(location)
-        options.title("동양미래대학교 8호관")
-        val bitmapDescriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
-        options.icon(bitmapDescriptor)
-        mMap.addMarker(options)
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 17.0f))
 
-        val cameraUpdate = CameraUpdateFactory.newLatLngZoom(location, 17.0f)
-        mMap.moveCamera(cameraUpdate)
+        // 지도를 터치하면 그 위치에 핀 찍기
+        mMap.setOnMapClickListener { latLng ->
+            mMap.clear()   // 이전 핀 지우기
+
+            val options = MarkerOptions()
+            options.position(latLng)
+            options.title("모임 장소")
+            options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+            mMap.addMarker(options)
+
+            selectedLatLng = latLng   // 찍은 위치 저장
+        }
     }
 }
