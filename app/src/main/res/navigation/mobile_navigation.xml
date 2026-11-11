@@ -22,10 +22,34 @@
         <action
             android:id="@+id/action_my_to_friendFragment"
             app:destination="@id/friendFragment" />
+        <action
+            android:id="@+id/action_my_to_group_ManagementFragment"
+            app:destination="@id/group_ManagementFragment" />
+        <action
+            android:id="@+id/action_my_to_previous_meetingFragment"
+            app:destination="@id/previous_meetingFragment" />
+        <action
+            android:id="@+id/action_my_to_notification_SettingsFragment"
+            app:destination="@id/notification_SettingsFragment" />
     </fragment>
     <fragment
         android:id="@+id/friendFragment"
         android:name="com.do_it.FriendFragment"
         android:label="친구"
         tools:layout="@layout/fragment_friend" />
+    <fragment
+        android:id="@+id/group_ManagementFragment"
+        android:name="com.do_it.Group_ManagementFragment"
+        android:label="내가 연 모임 관리"
+        tools:layout="@layout/fragment_group__management" />
+    <fragment
+        android:id="@+id/previous_meetingFragment"
+        android:name="com.do_it.Previous_meetingFragment"
+        android:label="지난 모임"
+        tools:layout="@layout/fragment_previous_meeting" />
+    <fragment
+        android:id="@+id/notification_SettingsFragment"
+        android:name="com.do_it.Notification_SettingsFragment"
+        android:label="알림 설정"
+        tools:layout="@layout/fragment_notification__settings" />
 </navigation>
