@@ -62,15 +62,22 @@ class homeFragment : Fragment() {
             )
         )
 
-        val createdList = listOf(
-            GroupData(
-                id = "g3",
-                title = "러닝 할래?",
-                dateTime = 1794607200000L,   // 2026.11.14 07:00
-                place = "안양천 산책로",
-                memberCount = 3,
-                maxMember = 8
-            )
+        val createdAdapter = listAdapter(
+            {item ->
+                Toast.makeText(context,"내가 연 모임 : ${item.title}",Toast.LENGTH_LONG).show()
+            },
+            { message->
+                Toast.makeText(context,message,Toast.LENGTH_LONG).show()
+            }
+        )
+
+        val joinedAdapter = listAdapter(
+            {item ->
+                Toast.makeText(context,"참가 중인 모임 : ${item.title}",Toast.LENGTH_LONG).show()
+            },
+            { message->
+                Toast.makeText(context,message,Toast.LENGTH_LONG).show()
+            }
         )
 
         binding.rvUpcoming.layoutManager =
@@ -82,15 +89,12 @@ class homeFragment : Fragment() {
 
         binding.rvJoined.layoutManager =
             LinearLayoutManager(requireContext())
-        binding.rvJoined.adapter = listAdapter(joinedList){ item->
-            Toast.makeText(context,"참여 중인 모임 : ${item.title}",Toast.LENGTH_LONG).show()
-        }
-
+        binding.rvJoined.adapter = joinedAdapter
+        joinedAdapter.loadJoinedItems()
         binding.rvCreated.layoutManager =
             LinearLayoutManager(requireContext())
-        binding.rvCreated.adapter = listAdapter(createdList){item ->
-            Toast.makeText(context,"내가 연 모임 : ${item.title}",Toast.LENGTH_LONG).show()
-        }
+        binding.rvCreated.adapter = createdAdapter
+        createdAdapter.loadItems()
 
     }
 

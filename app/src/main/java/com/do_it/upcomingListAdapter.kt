@@ -4,6 +4,7 @@ import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.do_it.MyApplication.Companion.auth
 import com.do_it.MyApplication.Companion.db
 import com.do_it.databinding.UpcomingScheduleItemBinding
 import com.google.firebase.firestore.CollectionReference
@@ -57,17 +58,22 @@ class upcomingListAdapter (
         return list.size
     }
     fun loadItems() {
-        // firestore에서 status가 0, 1인것만 가져오는 코드
-        val colref : CollectionReference = db.collection("groups")
+        // 내가 참여한 모임 중 모집중(0), 확정(1)이고 아직 안 지난 것을 가까운 순으로
+        val uid = auth.currentUser?.uid ?: return
+        val colref: CollectionReference = db.collection("groups")
 
-        val query: Query = colref.whereIn("status", listOf(0, 1))
+        val query: Query = colref.whereArrayContains("memberIds", uid)
+            .whereIn("status", listOf(0, 1))
         val task = query.get()
         task.addOnSuccessListener {
+            val now = System.currentTimeMillis()
             val dbList = mutableListOf<GroupData>()
-            for(document in it) {
+            for (document in it) {
                 val item = document.toObject(GroupData::class.java)
+                if (item.dateTime < now) continue   // 지난 모임 건너뛰기
                 dbList.add(item)
             }
+            dbList.sortBy { it.dateTime }   // 날짜 가까운 순
             list = dbList
             notifyDataSetChanged()
         }

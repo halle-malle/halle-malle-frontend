@@ -238,11 +238,22 @@
                 android:background="@drawable/bg_card"
                 android:orientation="vertical">
 
-                <fragment
-                    android:id="@+id/acmMap"
-                    android:name="com.google.android.gms.maps.SupportMapFragment"
+                <FrameLayout
                     android:layout_width="match_parent"
-                    android:layout_height="120dp" />
+                    android:layout_height="120dp">
+
+                    <fragment
+                        android:id="@+id/acmMap"
+                        android:name="com.google.android.gms.maps.SupportMapFragment"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+
+                    <!-- 지도 터치 감지용 투명 뷰 -->
+                    <View
+                        android:id="@+id/mapTouchBlocker"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+                </FrameLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
