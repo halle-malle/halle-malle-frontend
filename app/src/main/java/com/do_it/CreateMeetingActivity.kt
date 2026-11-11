@@ -45,8 +45,33 @@ class CreateMeetingActivity : AppCompatActivity(), OnMapReadyCallback {
             if (title.isEmpty()) {
                 Toast.makeText(baseContext, "모임 이름을 입력해주세요.", Toast.LENGTH_LONG).show()
             } else {
-                Toast.makeText(baseContext, "모임이 생성되었습니다!", Toast.LENGTH_SHORT).show()
-                finish()
+                val uid = MyApplication.auth.currentUser?.uid ?:
+                return@setOnClickListener
+                val ref = MyApplication.db.collection("groups").document()
+
+                val group = GroupData(
+                    id = ref.id,
+                    hostId = uid,
+                    title = title,
+                    description = binding.etDetail.text.toString(),
+                    maxMember = binding.seekBarMember.progress,
+                    memberCount = 1,
+                    createdAt = System.currentTimeMillis()
+                )
+
+                ref.set(group).addOnSuccessListener {
+                    ref.collection("members").document(uid).set(memberData(
+                        meetingId = ref.id,
+                        userId = uid,
+                        role = memberData.ROLE_HOST,
+                        joinedAt = System.currentTimeMillis()
+                        )
+                    )
+                    Toast.makeText(baseContext, "모임이 생성되었습니다!", Toast.LENGTH_SHORT).show()
+                    finish()
+                }.addOnFailureListener {
+                    Toast.makeText(baseContext, "모임 생성 실패", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
