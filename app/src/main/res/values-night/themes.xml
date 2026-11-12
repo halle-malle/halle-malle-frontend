@@ -1,16 +1,31 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Theme.Hallemalle" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.Hallemalle"  parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/purple_200</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
-        <item name="colorOnPrimary">@color/black</item>
+        <item name="colorPrimary">#666666</item>
+        <item name="colorPrimaryVariant">#AEAEB2</item>
+        <item name="colorOnPrimary">@color/white</item>
         <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorSecondaryVariant">@color/teal_200</item>
+        <item name="colorSecondary">#666666</item>
+        <item name="colorSecondaryVariant">#666666</item>
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
+        <!-- 화면이 밝아서 보이지 않던 상태바 수정        -->
+        <item name="android:fitsSystemWindows">true</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
+
+    <style name="AppBottomSheetDialogBorder20WhiteTheme"
+        parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/AppModalBorder20WhiteStyle</item>
+        <item name="android:windowIsFloating">false</item>
+    </style>
+
+    <style name="AppModalBorder20WhiteStyle"
+        parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@drawable/bg_bottom_sheet</item>
+    </style>
+
 </resources>

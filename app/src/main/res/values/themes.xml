@@ -12,6 +12,9 @@
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
+        <!-- 화면이 밝아서 보이지 않던 상태바 수정        -->
+        <item name="android:fitsSystemWindows">true</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 
     <style name="AppBottomSheetDialogBorder20WhiteTheme"
