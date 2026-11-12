@@ -43,7 +43,7 @@ class upcomingListAdapter (
 
         holder.binding.tvPlace.text = "${DateFormat.format("MM.dd (E) HH:mm", item.dateTime)}|${item.place}"
         holder.binding.tvTitle.text = item.title
-        holder.binding.tvNotice.text = "멤버 ${item.memberCount}/${item.maxMember} 공지:${item.notice}"
+        holder.binding.tvNotice.text = "멤버 ${item.memberCount}/${item.maxMember}명"
         holder.binding.btnChat.text = "그룹 채팅"
         holder.binding.btnDetail.text = "모임 상세"
         holder.binding.btnChat.setOnClickListener {

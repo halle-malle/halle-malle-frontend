@@ -261,7 +261,7 @@
             android:layout_height="0dp"
             android:layout_weight="1" />
 
-        <!-- 모임 삭제 버튼 (방장에게만 보임) -->
+        <!-- 하단 버튼 (방장: 모임 삭제 / 참여자: 모임 탈퇴, 코드에서 글자 바꿈) -->
         <Button
             android:id="@+id/btnDeleteGroup"
             android:layout_width="match_parent"

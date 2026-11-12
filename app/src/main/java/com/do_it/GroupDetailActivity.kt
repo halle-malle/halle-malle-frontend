@@ -51,6 +51,25 @@ class GroupDetailActivity : AppCompatActivity() {
         }
     }
 
+    // 모임 탈퇴 : members에서 내 문서를 지우고, 모임의 memberIds와 memberCount 수정
+    private fun leaveGroup(groupId: String, uid: String, item: GroupData) {
+        val ref = db.collection("groups").document(groupId)
+
+        ref.collection("members").document(uid).delete()
+
+        val task = ref.update(
+            "memberIds", item.memberIds - uid,
+            "memberCount", item.memberCount - 1
+        )
+        task.addOnSuccessListener {
+            Toast.makeText(baseContext, "모임에서 나왔어요.", Toast.LENGTH_SHORT).show()
+            finish()
+        }
+        task.addOnFailureListener {
+            Toast.makeText(baseContext, "탈퇴 실패", Toast.LENGTH_SHORT).show()
+        }
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,20 +102,6 @@ class GroupDetailActivity : AppCompatActivity() {
         binding.rvMember.addItemDecoration(DividerItemDecoration(this,
             LinearLayoutManager.VERTICAL))
 
-        // 모임 삭제 버튼 : 한 번 더 물어보고 삭제
-        binding.btnDeleteGroup.setOnClickListener {
-            val builder = AlertDialog.Builder(this)
-            builder.setTitle("모임 삭제")
-            builder.setMessage("모임을 삭제할까요? 삭제하면 되돌릴 수 없어요.")
-            builder.setPositiveButton("삭제", object: DialogInterface.OnClickListener {
-                override fun onClick(dialog: DialogInterface?, which: Int) {
-                    deleteGroup(groupId)
-                }
-            })
-            builder.setNegativeButton("취소", null)
-            builder.show()
-        }
-
         // 모임 정보 가져오기
         val task = db.collection("groups").document(groupId).get()
         task.addOnSuccessListener {
@@ -116,9 +121,44 @@ class GroupDetailActivity : AppCompatActivity() {
             binding.tvMember.text = "${item.memberCount}/${item.maxMember}명"
             binding.textView22.text = "함께하는 멤버 (${item.memberCount})"
 
-            // 방장에게만 삭제 버튼 보이기
-            if (item.hostId == auth.currentUser?.uid) {
+            // 하단 버튼 : 방장은 모임 삭제, 일반 참여자는 모임 탈퇴, 미참여자는 숨김
+            val uid = auth.currentUser?.uid
+            if (item.hostId == uid) {
+                binding.btnDeleteGroup.text = "모임 삭제"
                 binding.btnDeleteGroup.visibility = View.VISIBLE
+                // 모임 삭제 버튼 : 한 번 더 물어보고 삭제
+                binding.btnDeleteGroup.setOnClickListener {
+                    val builder = AlertDialog.Builder(this)
+                    builder.setTitle("모임 삭제")
+                    builder.setMessage("모임을 삭제할까요? 삭제하면 되돌릴 수 없어요.")
+                    builder.setPositiveButton("삭제", object: DialogInterface.OnClickListener {
+                        override fun onClick(dialog: DialogInterface?, which: Int) {
+                            deleteGroup(groupId)
+                        }
+                    })
+                    builder.setNegativeButton("취소", null)
+                    builder.show()
+                }
+            } else if (uid != null && item.memberIds.contains(uid)) {
+                binding.btnDeleteGroup.text = "모임 탈퇴"
+                binding.btnDeleteGroup.visibility = View.VISIBLE
+                // 모임 탈퇴 버튼 : 확정된 모임은 나갈 수 없고, 아니면 한 번 더 물어보고 탈퇴
+                binding.btnDeleteGroup.setOnClickListener {
+                    if (item.status == GroupData.STATUS_CONFIRMED) {
+                        Toast.makeText(baseContext, "확정된 모임은 나갈 수 없어요.", Toast.LENGTH_SHORT).show()
+                        return@setOnClickListener
+                    }
+                    val builder = AlertDialog.Builder(this)
+                    builder.setTitle("모임 탈퇴")
+                    builder.setMessage("모임에서 나갈까요?")
+                    builder.setPositiveButton("탈퇴", object: DialogInterface.OnClickListener {
+                        override fun onClick(dialog: DialogInterface?, which: Int) {
+                            leaveGroup(groupId, uid, item)
+                        }
+                    })
+                    builder.setNegativeButton("취소", null)
+                    builder.show()
+                }
             }
 
             // 방장 이름

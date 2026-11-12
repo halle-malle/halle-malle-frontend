@@ -60,17 +60,12 @@ class mapFragment : Fragment(), OnMapReadyCallback {
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15.0f))
 
         // 모집중(0), 확정(1)인 모임 불러와서 목록에 저장한 뒤 핀 찍기
-        val task = db.collection("groups").whereIn("status", listOf(0, 1)).get()
-        task.addOnSuccessListener {
-            groupList.clear()
-            for (document in it) {
-                val item = document.toObject(GroupData::class.java)
-                groupList.add(item)
-            }
-            showMarkers()
-        }
-        task.addOnFailureListener {
-            Toast.makeText(context, "모임 불러오기 실패", Toast.LENGTH_SHORT).show()
+        loadGroups()
+
+        // 새로고침 버튼 (지도가 준비된 뒤에 눌러야 핀을 찍을 수 있어서 여기서 등록)
+        binding.refresh.setOnClickListener {
+            loadGroups()
+            Toast.makeText(context, "새로고침", Toast.LENGTH_SHORT).show()
         }
 
         // 카테고리 필터 (지도가 준비된 뒤에 눌러야 핀을 다시 찍을 수 있어서 여기서 등록)
@@ -121,6 +116,22 @@ class mapFragment : Fragment(), OnMapReadyCallback {
             selected.setTextColor(Color.WHITE)
         }
         showMarkers()
+    }
+
+    // Firestore에서 모집중(0), 확정(1)인 모임을 불러와서 핀 다시 찍기
+    private fun loadGroups() {
+        val task = db.collection("groups").whereIn("status", listOf(0, 1)).get()
+        task.addOnSuccessListener {
+            groupList.clear()
+            for (document in it) {
+                val item = document.toObject(GroupData::class.java)
+                groupList.add(item)
+            }
+            showMarkers()
+        }
+        task.addOnFailureListener {
+            Toast.makeText(context, "모임 불러오기 실패", Toast.LENGTH_SHORT).show()
+        }
     }
 
     // 목록에 있는 모임 중 필터에 맞는 것만 핀 찍기

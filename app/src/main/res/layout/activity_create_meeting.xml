@@ -6,7 +6,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
-    tools:context=".CreateMeetingActivity">
+    android:fitsSystemWindows="true"
+    tools:context=".CreateMeetingActivity"
+    >
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/acmToolbar"
