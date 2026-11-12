@@ -1,59 +1,75 @@
 package com.do_it
 
+import android.content.Intent
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.fragment.app.Fragment
+import com.do_it.MyApplication.Companion.db
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
+import com.do_it.databinding.FragmentMapBinding
 
-/**
- * A simple [Fragment] subclass.
- * Use the [mapFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
-class mapFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+class mapFragment : Fragment(), OnMapReadyCallback {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private lateinit var mMap: GoogleMap
+    lateinit private var binding: FragmentMapBinding
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_map, container, false)
+    ): View {
+        binding = FragmentMapBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment mapFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            mapFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val mapFragment = childFragmentManager
+            .findFragmentById(R.id.map) as SupportMapFragment
+        mapFragment.getMapAsync(this)
+
+        // 모임 만들기 화면으로 이동
+        binding.createMeeting.setOnClickListener {
+            val intent = Intent(requireContext(), CreateMeetingActivity::class.java)
+            startActivity(intent)
+        }
+    }
+
+    override fun onMapReady(googleMap: GoogleMap) {
+        mMap = googleMap
+
+        // 처음 보여줄 위치 (동양미래대 8호관)
+        val location = LatLng(37.5000, 126.8663)
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15.0f))
+
+        // 모집중(0), 확정(1)인 모임 불러와서 핀 찍기
+        val task = db.collection("groups").whereIn("status", listOf(0, 1)).get()
+        task.addOnSuccessListener {
+            for (document in it) {
+                val item = document.toObject(GroupData::class.java)
+
+                // 위치가 없는 모임은 건너뛰기
+                if (item.latitude == 0.0 && item.longitude == 0.0) continue
+
+                val options = MarkerOptions()
+                options.position(LatLng(item.latitude, item.longitude))
+                options.title(item.title)
+                options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
+                mMap.addMarker(options)
             }
+        }
+        task.addOnFailureListener {
+            Toast.makeText(context, "모임 불러오기 실패", Toast.LENGTH_SHORT).show()
+        }
     }
 }

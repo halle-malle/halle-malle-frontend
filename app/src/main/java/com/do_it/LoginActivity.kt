@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.do_it.MyApplication.Companion.auth
+import com.do_it.MyApplication.Companion.db
 import com.do_it.databinding.ActivityLoginBinding
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
@@ -138,6 +139,15 @@ class LoginActivity : AppCompatActivity() {
                     setButtonsEnabled(true)
                     toast("사용자 정보를 가져오지 못함")
                     return
+                }
+                val newUser = userData(
+                    id=user.uid,
+                    email=email,
+                    createdAt = System.currentTimeMillis()
+                )
+                val saveTask = db.collection("users").document(user.uid).set(newUser)
+                saveTask.addOnFailureListener{
+                    toast("회원 정보 저장 실패")
                 }
                 val task=user.sendEmailVerification()
                 task.addOnCompleteListener {
