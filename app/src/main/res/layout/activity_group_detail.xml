@@ -258,7 +258,21 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_member"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <!-- 모임 삭제 버튼 (방장에게만 보임) -->
+        <Button
+            android:id="@+id/btnDeleteGroup"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_status_card_black"
+            android:text="모임 삭제"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
 
     </LinearLayout>
 

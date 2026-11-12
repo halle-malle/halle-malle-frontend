@@ -20,6 +20,9 @@ import com.google.firebase.firestore.Query
 class homeFragment : Fragment() {
 
     private lateinit var binding: FragmentHomeBinding
+    private lateinit var upcomingAdapter: upcomingListAdapter
+    private lateinit var joinedAdapter: listAdapter
+    private lateinit var createdAdapter: listAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -40,18 +43,21 @@ class homeFragment : Fragment() {
 
         )
 
-        val upcomingAdapter = upcomingListAdapter(
-            { item -> Toast.makeText(context,"그룹 채팅 추가",Toast.LENGTH_SHORT).show()},
+        upcomingAdapter = upcomingListAdapter(
+            { item ->
+                val intent: Intent = Intent(requireContext(), GroupChatActivity::class.java)
+                intent.putExtra("groupId", item.id)
+                startActivity(intent)
+            },
             { item ->
                 val intent: Intent = Intent(requireContext(), GroupDetailActivity::class.java)
+                intent.putExtra("groupId", item.id)
                 startActivity(intent)
             },
             { message -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show()}
         )
         binding.rvUpcoming.adapter = upcomingAdapter
         PagerSnapHelper().attachToRecyclerView(binding.rvUpcoming)
-
-        upcomingAdapter.loadItems()
 
         val joinedList = listOf(
             GroupData(
@@ -62,21 +68,33 @@ class homeFragment : Fragment() {
             )
         )
 
-        val createdAdapter = listAdapter(
+        createdAdapter = listAdapter(
             {item ->
-                Toast.makeText(context,"내가 연 모임 : ${item.title}",Toast.LENGTH_LONG).show()
+                // 누르면 모임 상세 화면으로
+                val intent: Intent = Intent(requireContext(), GroupDetailActivity::class.java)
+                intent.putExtra("groupId", item.id)
+                startActivity(intent)
             },
             { message->
                 Toast.makeText(context,message,Toast.LENGTH_LONG).show()
+            },
+            { count ->
+                binding.textView7.text = "내가 연 모임(${count})"
             }
         )
 
-        val joinedAdapter = listAdapter(
+        joinedAdapter = listAdapter(
             {item ->
-                Toast.makeText(context,"참가 중인 모임 : ${item.title}",Toast.LENGTH_LONG).show()
+                // 누르면 모임 상세 화면으로
+                val intent: Intent = Intent(requireContext(), GroupDetailActivity::class.java)
+                intent.putExtra("groupId", item.id)
+                startActivity(intent)
             },
             { message->
                 Toast.makeText(context,message,Toast.LENGTH_LONG).show()
+            },
+            { count ->
+                binding.textView5.text = "참여 중인 모임(${count})"
             }
         )
 
@@ -90,12 +108,18 @@ class homeFragment : Fragment() {
         binding.rvJoined.layoutManager =
             LinearLayoutManager(requireContext())
         binding.rvJoined.adapter = joinedAdapter
-        joinedAdapter.loadJoinedItems()
         binding.rvCreated.layoutManager =
             LinearLayoutManager(requireContext())
         binding.rvCreated.adapter = createdAdapter
-        createdAdapter.loadItems()
 
+    }
+
+    // 화면에 다시 돌아올 때마다 새로 불러오기 (모임 삭제, 참여 후에도 바로 반영)
+    override fun onResume() {
+        super.onResume()
+        upcomingAdapter.loadItems()
+        joinedAdapter.loadJoinedItems()
+        createdAdapter.loadItems()
     }
 
 }

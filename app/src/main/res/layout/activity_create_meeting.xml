@@ -166,8 +166,9 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="15"
-                    android:text="2026.10.23 금요일 17:00"
+                    android:hint="날짜와 시간을 선택해주세요"
                     android:textColor="@color/black"
+                    android:textColorHint="#636366"
                     android:textSize="14sp" />
 
                 <ImageView
@@ -266,8 +267,9 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="8"
-                        android:text="동양미래대학교 8호관 1층 대강당"
+                        android:hint="지도를 눌러 모임 장소를 찍어주세요"
                         android:textColor="@color/black"
+                        android:textColorHint="#636366"
                         android:textSize="13sp" />
 
                     <TextView
@@ -311,6 +313,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
+                android:min="2"
                 android:max="20"
                 android:progress="10"
                 android:thumbTint="#666666"

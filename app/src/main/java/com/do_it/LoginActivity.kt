@@ -265,6 +265,18 @@ class LoginActivity : AppCompatActivity() {
 
     // 홈화면(메인화면)으로 이동
     private fun showHomeScreen(user: FirebaseUser) {
+        // users에 회원 정보가 없으면 만들어 주기 (회원 정보 저장 코드가 생기기 전에 가입한 계정 대비)
+        val userRef = db.collection("users").document(user.uid)
+        userRef.get().addOnSuccessListener {
+            if (!it.exists()) {
+                userRef.set(userData(
+                    id = user.uid,
+                    email = user.email ?: "",
+                    createdAt = System.currentTimeMillis()
+                ))
+            }
+        }
+
         startActivity(Intent(this, MainActivity::class.java))
         finish()
     }

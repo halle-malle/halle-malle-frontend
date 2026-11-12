@@ -20,7 +20,8 @@ class itemViewHolder(
 class listAdapter(
 
     private val onItemClick: (GroupData) -> Unit,
-    private val toast: (String) -> Unit // 어답터 클래스 안에서 토스트 창을 띄워야 할 때 호출하는 함수
+    private val toast: (String) -> Unit, // 어답터 클래스 안에서 토스트 창을 띄워야 할 때 호출하는 함수
+    private val onLoaded: (Int) -> Unit // 다 불러오면 모임 개수를 알려주는 함수
 ) : RecyclerView.Adapter<itemViewHolder>() {
 
     private var list: List<GroupData> = listOf()
@@ -76,6 +77,7 @@ class listAdapter(
             }
             list = dbList
             notifyDataSetChanged()
+            onLoaded(list.size)
         }
         task.addOnFailureListener {
             toast("읽기 실패")
@@ -96,6 +98,7 @@ class listAdapter(
             }
             list = dbList
             notifyDataSetChanged()
+            onLoaded(list.size)
         }
         task.addOnFailureListener {
             toast("읽기 실패")
