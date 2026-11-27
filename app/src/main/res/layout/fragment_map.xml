@@ -55,6 +55,7 @@
             android:textSize="14sp" />
 
         <ImageView
+            android:id="@+id/ivSearch"
             android:layout_width="22dp"
             android:layout_height="22dp"
             android:layout_weight="1"

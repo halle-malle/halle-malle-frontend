@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.os.Looper
 import android.view.View
 import android.widget.Toast
-import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.do_it.MyApplication.Companion.db
@@ -31,7 +30,6 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.do_it.databinding.ActivitySelectLocationBinding
 import com.do_it.databinding.MarkerLayoutBinding
@@ -51,7 +49,6 @@ class SelectLocationActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private var selectedLatLng: LatLng? = null   // 지도에서 찍은 위치
     private var address = ""   // 핀 찍은 곳 주소
-    private var myMarker: Marker? = null   // 내가 찍은 핀
     private var pinTitle = ""   // 내 핀에 보여줄 모임 이름
     private var pinCategory = ""   // 내 핀에 보여줄 카테고리
 
@@ -121,8 +118,8 @@ class SelectLocationActivity : AppCompatActivity(), OnMapReadyCallback {
         // 모집중(0), 확정(1)인 모임 불러와서 목록에 저장한 뒤 핀 찍기
         loadGroups()
 
-        // 위치 권한 확인 후 내 위치 표시
-        checkLocationPermission()
+        // 내 위치 표시
+        showMyLocation()
 
         // 새로고침 버튼 (지도가 준비된 뒤에 눌러야 핀을 찍을 수 있어서 여기서 등록)
         binding.refresh.setOnClickListener {
@@ -132,7 +129,8 @@ class SelectLocationActivity : AppCompatActivity(), OnMapReadyCallback {
 
         // 지도를 터치하면 그 위치에 핀 찍기
         mMap.setOnMapClickListener { latLng ->
-            setPin(latLng)
+            selectedLatLng = latLng   // 찍은 위치 저장
+            showMarkers()
             showAddress(latLng)
             mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng))
         }
@@ -154,10 +152,9 @@ class SelectLocationActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    // 목록에 있는 모임 핀 찍기
+    // 목록에 있는 모임 핀 + 내가 찍은 핀 찍기
     private fun showMarkers() {
         mMap.clear()   // 이전 핀 지우기
-        myMarker = null
 
         for (item in groupList) {
             // 위치가 없는 모임은 건너뛰기
@@ -169,20 +166,14 @@ class SelectLocationActivity : AppCompatActivity(), OnMapReadyCallback {
             mMap.addMarker(options)
         }
 
-        // clear()로 내가 찍은 핀도 지워져서 다시 찍기
-        if (selectedLatLng != null) setPin(selectedLatLng!!)
-    }
-
-    // 내 핀 찍기 (다른 모임 핀은 남기고 내 핀만 바꾸기)
-    private fun setPin(latLng: LatLng) {
-        myMarker?.remove()
-
-        val options = MarkerOptions()
-        options.position(latLng)
-        options.icon(BitmapDescriptorFactory.fromBitmap(createMarker(pinTitle, pinCategory)))
-        myMarker = mMap.addMarker(options)
-
-        selectedLatLng = latLng   // 찍은 위치 저장
+        // 내가 찍은 핀
+        val latLng = selectedLatLng
+        if (latLng != null) {
+            val options = MarkerOptions()
+            options.position(latLng)
+            options.icon(BitmapDescriptorFactory.fromBitmap(createMarker(pinTitle, pinCategory)))
+            mMap.addMarker(options)
+        }
     }
 
     // 찍은 위치의 주소 보여주기 (위도, 경도 → 주소)
@@ -225,33 +216,7 @@ class SelectLocationActivity : AppCompatActivity(), OnMapReadyCallback {
         return bitmap
     }
 
-    private val launcher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions(),
-        object : ActivityResultCallback<Map<String, Boolean>> {
-            override fun onActivityResult(result: Map<String, Boolean>) {
-                var granted = true
-                for (p in result.values)
-                    granted = granted && p
-                if (granted == true)
-                    showMyLocation()
-                else
-                    Toast.makeText(baseContext, "위치 권한이 필요합니다.", Toast.LENGTH_LONG).show()
-            }
-        })
-
-    private fun checkLocationPermission() {
-        var array = arrayOf<String>()
-
-        if (checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-            array = array.plus(android.Manifest.permission.ACCESS_COARSE_LOCATION)
-        if (checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-            array = array.plus(android.Manifest.permission.ACCESS_FINE_LOCATION)
-
-        if (array.size == 0) // 모든 권한이 이미 있는 경우
-            showMyLocation()
-        else // 권한 요청
-            launcher.launch(array)
-    }
-
+    // 내 위치 보여주기 (위치 권한은 탐색 화면에서 이미 받아서 여기선 확인만)
     private fun showMyLocation() {
         if (checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
             checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
