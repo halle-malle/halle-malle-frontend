@@ -63,6 +63,12 @@ class listAdapter(
         return list.size
     }
 
+    // 이미 있는 목록 넣어서 보여주기 (탐색 화면 검색 결과)
+    fun setItems(items: List<GroupData>) {
+        list = items
+        notifyDataSetChanged()
+    }
+
     fun loadItems() {
         // firestore에서 status가 0, 1인것만 가져오는 코드
         val colref : CollectionReference = db.collection("groups")

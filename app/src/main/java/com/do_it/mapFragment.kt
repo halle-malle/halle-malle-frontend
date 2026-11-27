@@ -115,6 +115,36 @@ class mapFragment : Fragment(), OnMapReadyCallback {
             selectFilter(binding.filterEtc, "기타")
         }
 
+        // 검색 : 제목이나 주소에 검색어가 들어간 모임을 바텀시트 목록으로 보여주기
+        binding.ivSearch.setOnClickListener {
+            val keyword = binding.etSearch.text.toString().trim()
+            if (keyword.isEmpty()) {
+                Toast.makeText(context, "검색어를 입력해주세요.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val results = groupList.filter { it.title.contains(keyword) || it.place.contains(keyword) }
+            if (results.isEmpty()) {
+                Toast.makeText(context, "검색 결과가 없어요.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val sheet = SearchBottomSheetFragment()
+            sheet.keyword = keyword
+            sheet.results = results
+            // 결과를 누르면 그 모임 위치로 이동하고 모임 정보 바텀시트 띄우기
+            sheet.onItemClick = { item ->
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(item.latitude, item.longitude), 16.0f))
+
+                val pinSheet = PinBottomSheetFragment()
+                pinSheet.arguments = bundleOf("groupId" to item.id)
+                pinSheet.setStyle(DialogFragment.STYLE_NORMAL, R.style.AppBottomSheetDialogBorder20WhiteTheme)
+                pinSheet.show(parentFragmentManager, "pin")
+            }
+            sheet.setStyle(DialogFragment.STYLE_NORMAL, R.style.AppBottomSheetDialogBorder20WhiteTheme)
+            sheet.show(parentFragmentManager, "search")
+        }
+
         // 핀을 누르면 바텀시트로 모임 정보 보여주기
         mMap.setOnMarkerClickListener { marker ->
             val groupId = marker.tag as String?
