@@ -1,8 +1,10 @@
 package com.do_it
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.do_it.MyApplication.Companion.auth
 import com.do_it.databinding.ActivityGroupDetailBinding
 import com.do_it.databinding.GroupDetailMemberListItemBinding
 import com.do_it.databinding.UpcomingScheduleItemBinding
@@ -14,7 +16,8 @@ class detailMemberViewHolder(
 }
 
 class detailMemberAdapter (
-    private val list: List<memberData>
+    private val list: List<memberData>,
+    private val onItemClickAddFriend: (memberData) -> Unit
 ): RecyclerView.Adapter<detailMemberViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): detailMemberViewHolder {
@@ -43,6 +46,14 @@ class detailMemberAdapter (
                 else -> "멤버"
             }
             else -> "오류"
+        }
+        if (item.userId == auth.currentUser?.uid) {
+            holder.binding.btnAddFriend.visibility = View.GONE
+        } else {
+            holder.binding.btnAddFriend.visibility = View.VISIBLE
+            holder.binding.btnAddFriend.setOnClickListener {
+                onItemClickAddFriend(item)
+            }
         }
 
 

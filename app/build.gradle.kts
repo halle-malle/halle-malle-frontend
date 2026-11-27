@@ -42,7 +42,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -54,17 +53,22 @@ dependencies {
     implementation(libs.play.services.maps)
     implementation(libs.google.location)
     implementation(libs.google.places)
+
+    // Firebase
     implementation(platform("com.google.firebase:firebase-bom:34.16.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-storage")
+
     implementation(libs.androidx.legacy.support.v4)
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.activity)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-
     ksp(libs.androidx.room.compiler)
 }
