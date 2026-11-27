@@ -1,25 +1,47 @@
 package com.do_it
+
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.do_it.MyApplication.Companion.auth
 import com.do_it.MyApplication.Companion.db
 import com.do_it.databinding.ActivityLoginBinding
-import com.google.android.gms.tasks.OnCompleteListener
-import com.google.android.gms.tasks.Task
-import com.google.firebase.auth.AuthResult
+import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.PhoneAuthCredential
+import com.google.firebase.auth.PhoneAuthOptions
+import com.google.firebase.auth.PhoneAuthProvider
+import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.Source
+import com.google.firebase.storage.FirebaseStorage
+import java.util.concurrent.TimeUnit
 
 // 로그인 화면 액티비티
 class LoginActivity : AppCompatActivity() {
+
     private lateinit var binding: ActivityLoginBinding
+    private var verificationId = ""
+    private var requestedPhone = ""
+    private var instantCredential: PhoneAuthCredential? = null
+    private var imageUri: Uri? = null
+
+    // 프로필 사진 선택
+    private val selectImage = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) {
+        if (it != null) {
+            imageUri = it
+            binding.imageProfile.setImageURI(it)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,9 +50,12 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 여러 버튼들에 대한 클릭이벤트 처리기 등록을 위해 함수 호출
+        auth.setLanguageCode("ko")
+        auth.firebaseAuthSettings.forceRecaptchaFlowForTesting(true)
+        // 여러 버튼들에 대한 클릭이벤트 처리기 등록
         setClickListeners()
-        // 처음 화면을 보여줌 : 하나의 액티비티에서 로긴한 상태, 로그아웃한 상태, 회원가입화면을 관리
+
+        // 처음 화면을 보여줌
         showInitialScreen()
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -42,270 +67,385 @@ class LoginActivity : AppCompatActivity() {
 
     // 여러 버튼들에 대한 클릭이벤트 처리기 등록
     private fun setClickListeners() {
-
-        // 로그인
-        binding.buttonLogin.setOnClickListener {
-            loginWithEmail()
-        }
-
-        // 회원가입 화면 이동
-        binding.buttonGoSignup.setOnClickListener {
-            showSignupScreen()
-        }
-
-        // 회원가입
-        binding.buttonSignup.setOnClickListener {
-            createEmailAccount()
-        }
-
-        // 로그인 화면으로 돌아가기
+        binding.buttonLogin.setOnClickListener { requestCode() }
+        binding.buttonConfirmLogin.setOnClickListener { loginWithPhone() }
+        binding.buttonSelectImage.setOnClickListener { selectImage.launch("image/*") }
+        binding.buttonSaveProfile.setOnClickListener { createProfile() }
         binding.buttonBackLogin.setOnClickListener {
+            auth.signOut()
             showLoginScreen()
         }
-
-        binding.buttonSignupToLogin.setOnClickListener {
-            showLoginScreen()
-        }
-
-        // 비밀번호 찾기 화면 이동
-        binding.buttonFindPassword.setOnClickListener {
-            showFindPasswordScreen()
-        }
-
-        // 비밀번호 찾기에서 뒤로가기
-        binding.buttonFindBack.setOnClickListener {
-            showLoginScreen()
-        }
-
-        binding.buttonFindBackLogin.setOnClickListener {
-            showLoginScreen()
-        }
-
-        // 비밀번호 재설정
-        binding.buttonResetPassword.setOnClickListener {
-            resetPassword()
-        }
-
-        // 로그아웃
-        binding.buttonLogout.setOnClickListener {
-            logout()
-        }
+        binding.buttonLogout.setOnClickListener { logout() }
     }
 
     // 처음 화면을 보여줌
     private fun showInitialScreen() {
-        // 현재 로그인한 상태인지 체크하기 위해 인증객체(auth)로 부터 현재 사용자를 얻어옴
         val user = auth.currentUser
-        // user가 null이면 사용자 인증(로그인)이 안된상태
+
         if (user == null) {
-            showLoginScreen() // 로그인 화면으로
+            showLoginScreen()
             return
         }
 
-        // 로그인 인증 절차를 거친 사용자에 대해 이메일 인증이 완료되었는지 체크
-        // 이메일 인증이 완료된 경우에만 메인화면(홈 화면)으로 이동
-        if(!user.isEmailVerified){
+        if (user.phoneNumber.isNullOrBlank()) {
             auth.signOut()
             showLoginScreen()
-            // 토스트 띄우기
-            toast("이메일 인증이 완료되지 않았습니다!")
-        }else{
+        } else {
             showHomeScreen(user)
         }
     }
 
-    // 회원가입 : 계정을 만드는 요청 처리
-    private fun createEmailAccount() {
-        val email = binding.editSignupEmail.text.toString().trim()
-        val password = binding.editSignupPassword.text.toString()
-        val passwordConfirm = binding.editSignupPasswordConfirm.text.toString()
+    // 인증번호 요청
+    private fun requestCode() {
+        val phone = binding.editLoginPhone.text.toString()
+            .trim().replace("-", "").replace(" ", "")
 
-        // 입력한 내용의 유효성 검사
-        if (!validateSignup(email, password, passwordConfirm)) return
-
-        // 계정을 만드는 절차가 진행되므로 모든 버튼들의 상태를 비활성 상태로 전환
-        setButtonsEnabled(false)
-        //  firebase에 계정 생성을 요청
-        val task: Task<AuthResult> = auth.createUserWithEmailAndPassword(email,password)
-        task.addOnCompleteListener(object : OnCompleteListener<AuthResult>{
-            override fun onComplete(p0: Task<AuthResult?>) {
-                if(!p0.isSuccessful){
-                    setButtonsEnabled(true)
-                    showError(p0.exception)
-                    return
-                }//if
-                val user=auth.currentUser
-                if(user==null){
-                    setButtonsEnabled(true)
-                    toast("사용자 정보를 가져오지 못함")
-                    return
-                }
-                val newUser = userData(
-                    id=user.uid,
-                    email=email,
-                    createdAt = System.currentTimeMillis()
-                )
-                val saveTask = db.collection("users").document(user.uid).set(newUser)
-                saveTask.addOnFailureListener{
-                    toast("회원 정보 저장 실패")
-                }
-                val task=user.sendEmailVerification()
-                task.addOnCompleteListener {
-                    if(!it.isSuccessful){
-                        setButtonsEnabled(true)
-                        auth.signOut()
-                        toast("이메일 요청 실패")
-                        return@addOnCompleteListener
-                    }
-                    setButtonsEnabled(true)
-                    auth.signOut()
-                    showLoginScreen()
-                    toast("회원가입 완료, 이메일 확인 요망")
-                    binding.editLoginEmail.setText(email)
-                    binding.editLoginPassword.text.clear()
-                }
-            }//onComplete
-        })
-    }//create method
-
-    // 이메일/비번으로 회원가입 요청
-    private fun loginWithEmail() {
-        val email = binding.editLoginEmail.text.toString().trim()
-        val password = binding.editLoginPassword.text.toString()
-
-        // 입력한 내용의 유효성 검사
-        if (email.isBlank()) {
-            toast("이메일을 입력하세요.")
-            return
-        }
-        if (password.isBlank()) {
-            toast("비밀번호를 입력하세요.")
+        // 휴대폰 번호 유효성 검사
+        if (!phone.matches(Regex("010[0-9]{8}"))) {
+            toast("올바른 휴대폰 번호를 입력하세요.")
             return
         }
 
+        val phoneNumber = "+82" + phone.substring(1)
+
+        verificationId = ""
+        instantCredential = null
+        requestedPhone = phone
+
+        binding.editLoginCode.text.clear()
+        binding.textVerificationStatus.text = "인증번호를 요청하고 있습니다..."
+
         setButtonsEnabled(false)
 
-        // firebase에 로그인 요청
-        val task=auth.signInWithEmailAndPassword(email,password)
+        val options = PhoneAuthOptions.newBuilder(auth)
+            .setPhoneNumber(phoneNumber)
+            .setTimeout(0L, TimeUnit.SECONDS)
+            .setActivity(this)
+            .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+
+                // 즉시 인증 완료
+                override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+                    instantCredential = credential
+                    binding.textVerificationStatus.text = "로그인 버튼을 눌러주세요."
+                    setButtonsEnabled(true)
+                }
+
+                // 인증 요청 실패
+                override fun onVerificationFailed(e: FirebaseException) {
+                    verificationId = ""
+                    instantCredential = null
+                    binding.textVerificationStatus.text = "인증번호 요청 실패"
+                    setButtonsEnabled(true)
+                    showError(e)
+                }
+
+                // 인증번호 발송
+                override fun onCodeSent(
+                    id: String,
+                    token: PhoneAuthProvider.ForceResendingToken
+                ) {
+                    verificationId = id
+
+                    binding.textVerificationStatus.text = "인증번호를 입력해주세요."
+
+                    setButtonsEnabled(true)
+                    toast("인증번호 발송 요청이 완료되었습니다.")
+                }
+            }).build()
+
+        PhoneAuthProvider.verifyPhoneNumber(options)
+    }
+
+    // 휴대폰 번호로 로그인
+    private fun loginWithPhone() {
+        val currentUser = auth.currentUser
+
+        // 회원정보 조회에 실패한 경우 다시 조회
+        if (currentUser != null && !currentUser.phoneNumber.isNullOrBlank()) {
+            showHomeScreen(currentUser)
+            return
+        }
+
+        val phone = binding.editLoginPhone.text.toString()
+            .trim().replace("-", "").replace(" ", "")
+
+        val code = binding.editLoginCode.text.toString().trim()
+
+        if (phone != requestedPhone) {
+            toast("인증번호를 다시 요청해주세요.")
+            return
+        }
+
+        val credential: PhoneAuthCredential
+        val savedCredential = instantCredential
+
+        if (savedCredential != null) {
+            credential = savedCredential
+        } else {
+            if (verificationId.isBlank()) {
+                toast("인증번호를 먼저 요청하세요.")
+                return
+            }
+
+            if (!code.matches(Regex("[0-9]{6}"))) {
+                toast("인증번호 6자리를 입력하세요.")
+                return
+            }
+
+            credential = PhoneAuthProvider.getCredential(verificationId, code)
+        }
+
+        setButtonsEnabled(false)
+        binding.textVerificationStatus.text = "인증 중입니다..."
+
+        // Firebase에 로그인 요청
+        val task = auth.signInWithCredential(credential)
+
         task.addOnCompleteListener {
-            if(!it.isSuccessful){
+            if (!it.isSuccessful) {
+                instantCredential = null
+                binding.textVerificationStatus.text = "인증 실패. 다시 시도해주세요."
                 setButtonsEnabled(true)
                 showError(it.exception)
                 return@addOnCompleteListener
-            }//if
-            val user=auth.currentUser
-            if(user==null){
+            }
+
+            val user = auth.currentUser
+
+            if (user == null) {
+                binding.textVerificationStatus.text = "사용자 정보 조회 실패"
                 setButtonsEnabled(true)
                 toast("사용자 정보를 가져오지 못함")
                 return@addOnCompleteListener
-            }//if
-
-            if(!user.isEmailVerified){
-                setButtonsEnabled(true)
-                auth.signOut()
-                toast("로그인 실패")
-                return@addOnCompleteListener
             }
-            setButtonsEnabled(true)
-            toast("로그인 성공")
+
+            verificationId = ""
+            requestedPhone = ""
+            instantCredential = null
+
+            binding.textVerificationStatus.text = "인증 완료"
+
             showHomeScreen(user)
         }
     }
 
-    private fun logout() {
-        auth.signOut()
-        showLoginScreen()
-        //Toast.makeText(baseContext, "로그아웃되었습니다.", Toast.LENGTH_LONG).show()
-        toast("로그아웃되었습니다.")
-    }
+    // 프로필 등록
+    private fun createProfile() {
+        val name = binding.editProfileName.text.toString().trim()
+        val nickname = binding.editProfileNickname.text.toString().trim()
+        val bio = binding.editProfileBio.text.toString().trim()
 
-    // 로그인 화면
-    private fun showLoginScreen() {
-        binding.layoutLogin.visibility = View.VISIBLE
-        binding.layoutSignup.visibility = View.GONE
-        binding.layoutFindPassword.visibility = View.GONE
-        binding.layoutHome.visibility = View.GONE
-        setButtonsEnabled(true)
-    }
+        // 입력한 내용의 유효성 검사
+        if (!validateProfile(name, nickname)) return
 
-    // 회원가입 화면
-    private fun showSignupScreen() {
-        binding.layoutLogin.visibility = View.GONE
-        binding.layoutSignup.visibility = View.VISIBLE
-        binding.layoutFindPassword.visibility = View.GONE
-        binding.layoutHome.visibility = View.GONE
-        setButtonsEnabled(true)
-    }
+        val user = auth.currentUser
 
-    // 비밀번호 찾기 화면
-    private fun showFindPasswordScreen() {
-        binding.layoutLogin.visibility = View.GONE
-        binding.layoutSignup.visibility = View.GONE
-        binding.layoutFindPassword.visibility = View.VISIBLE
-        binding.layoutHome.visibility = View.GONE
-    }
-    private fun resetPassword() {
-        val email = binding.editFindEmail.text.toString().trim()
-
-        if (email.isBlank()) {
-            toast("이메일을 입력하세요.")
+        if (user == null || user.phoneNumber.isNullOrBlank()) {
+            toast("사용자 정보를 가져오지 못함")
             return
         }
 
-        auth.sendPasswordResetEmail(email)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    toast("재설정 요청이 처리되었습니다.")
-                    showLoginScreen()
-                } else {
-                    showError(task.exception)
+        setButtonsEnabled(false)
+
+        val uri = imageUri
+
+        // 프로필 사진이 없는 경우
+        if (uri == null) {
+            saveProfile(user, name, nickname, bio, "")
+            return
+        }
+
+        // Firebase Storage에 프로필 사진 저장
+        val imageRef = FirebaseStorage.getInstance()
+            .reference.child("profiles/${user.uid}/profile")
+
+        val task = imageRef.putFile(uri)
+
+        task.addOnCompleteListener {
+            if (!it.isSuccessful) {
+                setButtonsEnabled(true)
+                showError(it.exception)
+            } else {
+                // 저장된 이미지의 주소 가져오기
+                val urlTask = imageRef.downloadUrl
+
+                urlTask.addOnCompleteListener { result ->
+                    if (!result.isSuccessful) {
+                        setButtonsEnabled(true)
+                        showError(result.exception)
+                    } else {
+                        saveProfile(
+                            user, name, nickname, bio,
+                            result.result.toString()
+                        )
+                    }
                 }
             }
+        }
     }
 
-    // 홈화면(메인화면)으로 이동
+    // Firestore에 회원정보 저장
+    private fun saveProfile(
+        user: FirebaseUser,
+        name: String,
+        nickname: String,
+        bio: String,
+        imageUrl: String
+    ) {
+        val newUser = hashMapOf(
+            "id" to user.uid,
+            "phoneNumber" to user.phoneNumber,
+            "name" to name,
+            "nickname" to nickname,
+            "bio" to bio,
+            "profileImageUrl" to imageUrl,
+            "createdAt" to (user.metadata?.creationTimestamp
+                ?: System.currentTimeMillis())
+        )
+
+        val task = db.collection("users")
+            .document(user.uid)
+            .set(newUser, SetOptions.merge())
+
+        task.addOnCompleteListener {
+            if (!it.isSuccessful) {
+                setButtonsEnabled(true)
+                showError(it.exception)
+                return@addOnCompleteListener
+            }
+
+            toast("프로필 등록 완료")
+            showHomeScreen(user)
+        }
+    }
+
+    // 로그아웃
+    private fun logout() {
+        auth.signOut()
+        showLoginScreen()
+        toast("로그아웃되었습니다.")
+    }
+
+    // 로그인 화면 보여주기
+    private fun showLoginScreen() {
+        verificationId = ""
+        requestedPhone = ""
+        instantCredential = null
+        imageUri = null
+
+        binding.editLoginPhone.text.clear()
+        binding.editLoginCode.text.clear()
+
+        binding.editProfileName.text.clear()
+        binding.editProfileNickname.text.clear()
+        binding.editProfileBio.text.clear()
+
+        binding.imageProfile.setImageResource(android.R.drawable.ic_menu_camera)
+
+        binding.textVerificationStatus.text = "휴대폰 번호를 입력해주세요."
+
+        binding.layoutLogin.visibility = View.VISIBLE
+        binding.layoutProfile.visibility = View.GONE
+        binding.layoutHome.visibility = View.GONE
+
+        setButtonsEnabled(true)
+    }
+
+    // 프로필 등록 화면 보여주기
+    private fun showProfileScreen() {
+        binding.layoutLogin.visibility = View.GONE
+        binding.layoutProfile.visibility = View.VISIBLE
+        binding.layoutHome.visibility = View.GONE
+
+        setButtonsEnabled(true)
+    }
+
+    // 홈화면으로 이동
     private fun showHomeScreen(user: FirebaseUser) {
-        // users에 회원 정보가 없으면 만들어 주기 (회원 정보 저장 코드가 생기기 전에 가입한 계정 대비)
-        val userRef = db.collection("users").document(user.uid)
-        userRef.get().addOnSuccessListener {
-            if (!it.exists()) {
-                userRef.set(userData(
-                    id = user.uid,
-                    email = user.email ?: "",
-                    createdAt = System.currentTimeMillis()
-                ))
+        binding.layoutLogin.visibility = View.VISIBLE
+        binding.layoutProfile.visibility = View.GONE
+        binding.layoutHome.visibility = View.GONE
+
+        setButtonsEnabled(false)
+
+        binding.textVerificationStatus.text = "인증 완료. 회원정보를 확인하고 있습니다..."
+
+        val task = db.collection("users")
+            .document(user.uid)
+            .get(Source.SERVER)
+
+        task.addOnCompleteListener {
+            if (!it.isSuccessful) {
+                binding.textVerificationStatus.text = "회원정보 조회 실패"
+                setButtonsEnabled(true)
+                showError(it.exception)
+                return@addOnCompleteListener
+            }
+
+            val document = it.result
+
+            val name = document.getString("name")
+            val nickname = document.getString("nickname")
+
+            // 회원정보가 없으면 프로필 등록 화면으로 이동
+            if (!document.exists() || name.isNullOrBlank() || nickname.isNullOrBlank()) {
+                binding.editProfileName.setText(name ?: "")
+                binding.editProfileNickname.setText(nickname ?: "")
+                binding.editProfileBio.setText(document.getString("bio") ?: "")
+
+                showProfileScreen()
+            } else {
+                binding.textVerificationStatus.text = "로그인 성공"
+                toast("로그인 성공")
+                startActivity(Intent(this, MainActivity::class.java))
+                finish()
             }
         }
-
-        startActivity(Intent(this, MainActivity::class.java))
-        finish()
     }
 
-    // 회원가입화면에서 입력한 값들의 유효성 검사
-    private fun validateSignup(email: String, password: String, confirm: String): Boolean {
-        if (email.isBlank()) {
-            toast("이메일을 입력하세요.")
+    // 프로필 입력값 유효성 검사
+    private fun validateProfile(name: String, nickname: String): Boolean {
+        if (name.isBlank()) {
+            toast("이름을 입력하세요.")
             return false
         }
-        if (password.length < 6) {
-            toast("비밀번호는 6자 이상이어야 합니다.")
+
+        if (nickname.isBlank()) {
+            toast("닉네임을 입력하세요.")
             return false
         }
-        if (password != confirm) {
-            toast("비밀번호가 일치하지 않습니다.")
-            return false
-        }
+
         return true
     }
 
-    // 버튼들의 활성화 / 비활성화 설정 : 매개변수의 값에 따라 true이면 활성화
+    // 버튼들의 활성화 및 비활성화 설정
     private fun setButtonsEnabled(enabled: Boolean) {
-        binding.buttonLogin.isEnabled = enabled
-        binding.buttonGoogleLogin.isEnabled = enabled
-        binding.buttonGoSignup.isEnabled = enabled
-        binding.buttonSignup.isEnabled = enabled
+        val verified = !auth.currentUser?.phoneNumber.isNullOrBlank()
+
+        binding.buttonLogin.isEnabled = enabled && !verified
+
+        binding.buttonConfirmLogin.isEnabled = enabled &&
+                (verified || verificationId.isNotBlank() || instantCredential != null)
+
+        binding.buttonSaveProfile.isEnabled = enabled && verified
+        binding.buttonSelectImage.isEnabled = enabled
         binding.buttonBackLogin.isEnabled = enabled
         binding.buttonLogout.isEnabled = enabled
+
+        binding.editLoginPhone.isEnabled = enabled && !verified
+
+        binding.editLoginCode.isEnabled = enabled && !verified &&
+                verificationId.isNotBlank() && instantCredential == null
+
+        binding.editProfileName.isEnabled = enabled
+        binding.editProfileNickname.isEnabled = enabled
+        binding.editProfileBio.isEnabled = enabled
+
+        if (verified) {
+            binding.buttonConfirmLogin.text = "다시 확인"
+        } else {
+            binding.buttonConfirmLogin.text = "로그인"
+        }
     }
 
     // 오류 상황에서 토스트를 띄우고 Log로 남김
@@ -313,6 +453,7 @@ class LoginActivity : AppCompatActivity() {
         Log.e("FirebaseAuthExample", "Authentication error", error)
         toast(error?.localizedMessage ?: "인증 처리 중 오류가 발생했습니다.", true)
     }
+
     // 토스트 띄워줌
     private fun toast(message: String, long: Boolean = false) {
         Toast.makeText(this, message, if (long) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show()
