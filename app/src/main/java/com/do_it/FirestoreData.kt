@@ -43,7 +43,6 @@ data class GroupData(
     val memberCount: Int = 0,
     val maxMember: Int = 0,
     val notice: String = "",
-    val confirmDate: Long = 0L,       // 모집 확정일 (0이면 없음)
     val createdAt: Long = 0L
 ) {
     companion object {
