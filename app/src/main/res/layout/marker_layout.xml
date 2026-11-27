@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 지도 핀 (필터 버튼과 같은 디자인) -->
+<!-- wrap_content라 글자 길이만큼 박스 크기가 바뀜, 너무 길면 maxEms로 막고 ...으로 줄임 -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tvMarker"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_filter_unselected"
+    android:ellipsize="end"
+    android:maxEms="8"
+    android:maxLines="1"
+    android:paddingHorizontal="8dp"
+    android:paddingVertical="4dp"
+    android:text="🏸 배드민턴 할래?"
+    android:textColor="@color/black"
+    android:textSize="12sp" />

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:fitsSystemWindows="true"
+    tools:context=".SelectLocationActivity">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/slToolbar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        app:navigationIcon="@drawable/outline_arrow_back_24"
+        app:title="위치 지정"
+        app:titleTextColor="@color/black"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- 지도 프래그먼트 -->
+    <fragment
+        android:id="@+id/slMap"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:uiCompass="true"
+        app:uiRotateGestures="true"
+        app:uiScrollGestures="true"
+        app:uiTiltGestures="true"
+        app:uiZoomControls="true"
+        app:uiZoomGestures="true"
+        app:uiMapToolbar="false"
+        app:layout_constraintTop_toBottomOf="@id/slToolbar"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- 장소 검색창 (누르면 검색 화면으로 이동) -->
+    <LinearLayout
+        android:id="@+id/layoutPlaceSearch"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_search_box"
+        android:elevation="4dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/slToolbar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="17"
+            android:layout_marginStart="15dp"
+            android:hint="장소나 주소를 검색하세요"
+            android:textColorHint="#AEAEB2"
+            android:textSize="14sp" />
+
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_weight="1"
+            android:src="@android:drawable/ic_menu_search"
+            app:tint="#555555" />
+    </LinearLayout>
+
+    <!-- 핀 찍은 곳 주소 -->
+    <TextView
+        android:id="@+id/tvAddress"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_search_box"
+        android:elevation="4dp"
+        android:hint="지도를 눌러 모임 장소를 찍어주세요"
+        android:padding="12dp"
+        android:textColor="@color/black"
+        android:textColorHint="#636366"
+        android:textSize="13sp"
+        app:layout_constraintTop_toBottomOf="@id/layoutPlaceSearch"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- 새로고침 버튼 -->
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/refresh"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_margin="20dp"
+        android:background="@drawable/bg_btn_circle"
+        android:elevation="4dp"
+        android:src="@android:drawable/ic_popup_sync"
+        app:tint="#4A4A4A"
+        android:scaleType="centerInside"
+        android:padding="12dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- 핀 찍기 버튼 -->
+    <Button
+        android:id="@+id/btnSelect"
+        android:layout_width="wrap_content"
+        android:layout_height="46dp"
+        android:layout_margin="21dp"
+        android:background="@drawable/bg_btn_meeting"
+        android:elevation="4dp"
+        android:paddingHorizontal="18dp"
+        android:text="📍 핀 찍기"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -51,6 +51,8 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.play.services.maps)
+    implementation(libs.google.location)
+    implementation(libs.google.places)
 
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:34.16.0"))
