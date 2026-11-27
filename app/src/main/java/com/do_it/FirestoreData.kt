@@ -9,7 +9,11 @@ data class userData (
     val trustScore:Int= 0,
     val createdAt: Long=0L
 )
-
+data class friendData(
+    val userId: String = "",    // 상대방 uid
+    val status: Int = 0,        // 0 받은 요청, 1 친구
+    val createdAt: Long = 0L
+)
 data class memberData (
     val meetingId:String="",
     val userId:String="",

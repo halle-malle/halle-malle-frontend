@@ -96,7 +96,19 @@ class GroupDetailActivity : AppCompatActivity() {
         }
         binding.tvNewCount.visibility = View.GONE   // 새 메시지 수는 아직 없어서 숨김
 
-        adapter = detailMemberAdapter(memberList)
+        adapter = detailMemberAdapter(memberList) { member ->
+            val myId = auth.currentUser?.uid ?: return@detailMemberAdapter
+            val ref = db.collection("users").document(member.userId).collection("friends").document(myId)
+            ref.get().addOnSuccessListener {
+                if (it.exists()) {   // 이미 요청했거나 이미 친구
+                    Toast.makeText(baseContext, "이미 요청했거나 친구예요.", Toast.LENGTH_SHORT).show()
+                    return@addOnSuccessListener
+                }
+                ref.set(friendData(userId = myId, status = 0, createdAt = System.currentTimeMillis()))
+                    .addOnSuccessListener { Toast.makeText(baseContext, "친구 요청을 보냈어요.", Toast.LENGTH_SHORT).show() }
+                    .addOnFailureListener { Toast.makeText(baseContext, "요청 실패", Toast.LENGTH_SHORT).show() }
+            }
+        }
         binding.rvMember.layoutManager = LinearLayoutManager(this)
         binding.rvMember.adapter = adapter
         binding.rvMember.addItemDecoration(DividerItemDecoration(this,
