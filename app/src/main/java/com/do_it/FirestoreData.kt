@@ -70,3 +70,8 @@ data class chatData (
     }
 }
 
+data class reportData(
+    val userId: String = "",         // 신고당한 사람 uid
+    val count: Int = 0,              // 신고 횟수
+    val reportedAt: Long = 0L        // 마지막 신고 시각
+)

@@ -16,8 +16,8 @@ class friendInvitationItemViewHolder(
 }
 
 class friendInvitationListAdapter (
-    private val toast: (String) -> Unit // 어답터 클래스 안에서 토스트 창을 띄워야 할 때 호출하는 함수
-
+    private val toast: (String) -> Unit, // 어답터 클래스 안에서 토스트 창을 띄워야 할 때 호출하는 함수
+    private val onAccepted: () -> Unit
 ) : RecyclerView.Adapter<friendInvitationItemViewHolder>() {
 
     private var list: MutableList<userData> = mutableListOf()
@@ -86,6 +86,7 @@ class friendInvitationListAdapter (
     }
 
     // 수락 : 내 쪽 요청을 친구(1)로 바꾸고, 상대방 friends에도 나를 친구로 추가
+    // 수락 : 내 쪽 요청을 친구(1)로 바꾸고, 상대방 friends에도 나를 친구로 추가
     private fun accept(item: userData) {
         val uid = auth.currentUser?.uid ?: return
         // update는 문서가 없으면 실패함 (없는 요청을 수락해서 상대방 쪽에 쓰레기 데이터가 생기는 것 방지)
@@ -96,7 +97,9 @@ class friendInvitationListAdapter (
                 userId = uid,
                 status = 1,
                 createdAt = System.currentTimeMillis()
-            ))
+            )).addOnSuccessListener {   // ← 추가
+                onAccepted()             // ← 추가
+            }                            // ← 추가
             list.remove(item)
             notifyDataSetChanged()
             toast("친구가 되었어요.")
