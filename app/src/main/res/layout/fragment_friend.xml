@@ -14,6 +14,26 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="20dp"
+            android:text="친구"
+            android:textColor="#222222"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            android:paddingHorizontal="20dp"
+            android:text="받은 친구 요청과 내 친구 목록을 볼 수 있어요."
+            android:textColor="#777777"
+            android:textSize="13sp" />
+
         <LinearLayout
             android:background="#FBF8EF"
             android:layout_width="match_parent"

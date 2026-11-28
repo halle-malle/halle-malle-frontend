@@ -7,17 +7,17 @@
     <fragment
         android:id="@+id/home"
         android:name= "com.do_it.homeFragment"
-        android:label="할래말래?"
+        android:label=""
         tools:layout="@layout/fragment_home" />
     <fragment
         android:id="@+id/quest"
         android:name="com.do_it.mapFragment"
-        android:label="@string/title_quest"
+        android:label=""
         tools:layout="@layout/fragment_map" />
     <fragment
         android:id="@+id/my"
         android:name="com.do_it.mypageFragment"
-        android:label="마이페이지"
+        android:label=""
         tools:layout="@layout/fragment_mypage" >
         <action
             android:id="@+id/action_my_to_friendFragment"
@@ -28,26 +28,41 @@
         <action
             android:id="@+id/action_my_to_notification_SettingsFragment"
             app:destination="@id/notification_SettingsFragment" />
+        <action
+            android:id="@+id/action_my_to_privacyFragment"
+            app:destination="@id/privacyFragment" />
+        <action
+            android:id="@+id/action_my_to_rulesFragment"
+            app:destination="@id/rulesFragment" />
+        <action
+            android:id="@+id/action_my_to_editProfileFragment"
+            app:destination="@id/editProfileFragment" />
     </fragment>
     <fragment
         android:id="@+id/friendFragment"
         android:name="com.do_it.FriendFragment"
-        android:label="친구"
+        android:label=""
         tools:layout="@layout/fragment_friend" />
     <fragment
         android:id="@+id/previous_meetingFragment"
         android:name="com.do_it.Previous_meetingFragment"
-        android:label="지난 모임"
+        android:label=""
         tools:layout="@layout/fragment_previous_meeting" />
     <fragment
         android:id="@+id/notification_SettingsFragment"
         android:name="com.do_it.Notification_SettingsFragment"
-        android:label="알림 설정"
+        android:label=""
         tools:layout="@layout/fragment_notification__settings" />
     <fragment android:id="@+id/editProfileFragment" android:name="com.do_it.EditProfileFragment"
-        android:label="프로필 수정" tools:layout="@layout/fragment_edit_profile" />
-    <fragment android:id="@+id/appInfoFragment" android:name="com.do_it.AppInfoFragment"
-        android:label="앱 정보" tools:layout="@layout/fragment_app_info">
-        <argument android:name="page" app:argType="string" android:defaultValue="terms" />
-    </fragment>
+        android:label="" tools:layout="@layout/fragment_edit_profile" />
+    <fragment
+        android:id="@+id/rulesFragment"
+        android:name="com.do_it.RulesFragment"
+        android:label=""
+        tools:layout="@layout/fragment_rules" />
+    <fragment
+        android:id="@+id/privacyFragment"
+        android:name="com.do_it.PrivacyFragment"
+        android:label=""
+        tools:layout="@layout/fragment_privacy" />
 </navigation>

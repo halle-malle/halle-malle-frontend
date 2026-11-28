@@ -41,8 +41,12 @@ class mypageFragment : Fragment() {
         binding.buttonEditProfile.setOnClickListener {
             findNavController().navigate(R.id.editProfileFragment)
         }
-        binding.menuTerms.setOnClickListener { openInfo("terms") }
-        binding.menuPrivacy.setOnClickListener { openInfo("privacy") }
+        binding.menuTerms.setOnClickListener {
+            findNavController().navigate(R.id.rulesFragment)
+        }
+        binding.menuPrivacy.setOnClickListener {
+            findNavController().navigate(R.id.privacyFragment)
+        }
         binding.menuLocationPermission.setOnClickListener { openAppSettings() }
         binding.tvVersion.text = requireContext().packageManager
             .getPackageInfo(requireContext().packageName, 0).versionName
@@ -103,10 +107,6 @@ class mypageFragment : Fragment() {
             coarse == PackageManager.PERMISSION_GRANTED -> "대략적인 위치 허용"
             else -> "허용 안 됨"
         }
-    }
-
-    private fun openInfo(page: String) {
-        findNavController().navigate(R.id.appInfoFragment, Bundle().apply { putString("page", page) })
     }
 
     private fun openAppSettings() {

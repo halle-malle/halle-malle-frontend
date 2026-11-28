@@ -47,7 +47,15 @@ class listAdapter(
     ) {
         val item = list[position]
 
-        holder.binding.tvTitle.text = item.title
+        // 카테고리 이모지 모임 이름 앞에 붙이기
+        val emoji = when (item.category) {
+            "운동" -> "🏸"
+            "스터디" -> "💻"
+            "맛집" -> "🍕"
+            "취미" -> "🎸"
+            else -> "💬"
+        }
+        holder.binding.tvTitle.text = emoji + " " + item.title
         holder.binding.tvInfo.text = "${DateFormat.format("MM.dd (E) HH:mm", item.dateTime)} | ${item.place}"
         // 모집 상태
         if (item.status == GroupData.STATUS_FINISHED || item.dateTime + GroupData.END_TIME < System.currentTimeMillis()) {
