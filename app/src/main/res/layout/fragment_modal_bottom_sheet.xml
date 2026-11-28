@@ -156,7 +156,7 @@
                     android:layout_marginBottom = "10dp"
                     android:textColor="#1C1C1E"
                     android:textSize="14sp"
-                    android:text="이용약관"
+                    android:text="사용 규칙"
                     android:drawableEnd="@drawable/ic_arrow_forward"/>
 
                 <TextView

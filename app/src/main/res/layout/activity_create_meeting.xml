@@ -220,7 +220,7 @@
                         android:id="@+id/tvAddress"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="8"
+                        android:layout_weight="14"
                         android:hint="눌러서 모임 장소를 지정해주세요"
                         android:textColor="@color/black"
                         android:textColorHint="#636366"
@@ -237,6 +237,29 @@
                         android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="장소 이름"
+                android:textColor="@color/black"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <!-- 장소 이름 (위치를 지정하면 채워지고, 눌러서 고칠 수 있음) -->
+            <EditText
+                android:id="@+id/etPlaceName"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_input"
+                android:hint="위치를 지정하면 자동으로 채워져요"
+                android:paddingHorizontal="14dp"
+                android:inputType="text"
+                android:textColor="@color/black"
+                android:textColorHint="#636366"
+                android:textSize="14sp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -256,7 +279,7 @@
                     android:id="@+id/tvMemberCount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="10명"
+                    android:text="2명"
                     android:textColor="@color/black"
                     android:textSize="15sp"
                     android:textStyle="bold" />
@@ -269,7 +292,7 @@
                 android:layout_marginTop="8dp"
                 android:min="2"
                 android:max="20"
-                android:progress="10"
+                android:progress="2"
                 android:thumbTint="#666666"
                 android:progressTint="#666666" />
 

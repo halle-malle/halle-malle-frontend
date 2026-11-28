@@ -51,7 +51,7 @@ class listAdapter(
         holder.binding.tvInfo.text = "${DateFormat.format("MM.dd (E) HH:mm", item.dateTime)} | ${item.place}"
         holder.binding.tvStatus.text = when(item.status) {
                 GroupData.STATUS_RECRUITING -> "모집 중"
-                GroupData.STATUS_CONFIRMED -> "확정"
+                GroupData.STATUS_CONFIRMED -> "모집 확정"
                 else -> "에러"
         }
         holder.itemView.setOnClickListener{
@@ -76,9 +76,11 @@ class listAdapter(
         val query: Query = colref.whereEqualTo("hostId", auth.currentUser?.uid).whereIn("status", listOf(0, 1))
         val task = query.get()
         task.addOnSuccessListener {
+            val now = System.currentTimeMillis()
             val dbList = mutableListOf<GroupData>()
             for(document in it) {
                 val item = document.toObject(GroupData::class.java)
+                if (item.dateTime < now) continue   // 지난 모임 건너뛰기
                 dbList.add(item)
             }
             list = dbList
@@ -97,9 +99,12 @@ class listAdapter(
         val query: Query = colref.whereArrayContains("memberIds", uid).whereIn("status", listOf(0, 1))
         val task = query.get()
         task.addOnSuccessListener {
+            val now = System.currentTimeMillis()
             val dbList = mutableListOf<GroupData>()
             for(document in it) {
                 val item = document.toObject(GroupData::class.java)
+                if (item.hostId == uid) continue   // 내가 연 모임은 아래 "내가 연 모임"에 있어서 건너뛰기
+                if (item.dateTime < now) continue   // 지난 모임 건너뛰기
                 dbList.add(item)
             }
             list = dbList

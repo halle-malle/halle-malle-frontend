@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:fitsSystemWindows="true"
+    tools:context=".PrivacyActivity">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/privacyToolbar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        app:navigationIcon="@drawable/outline_arrow_back_24"
+        app:title="개인정보 처리방침"
+        app:titleTextColor="@color/black"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/privacyToolbar"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="20dp"
+            android:lineSpacingExtra="4dp"
+            android:textColor="#222222"
+            android:textSize="14sp"
+            android:text="할래말래?는 회원의 개인정보를 아래와 같이 처리해요.\n\n1. 수집하는 정보\n- 필수: 휴대폰 번호, 이름, 닉네임\n- 선택: 한 줄 소개, 프로필 사진\n- 앱을 쓰면서 생기는 정보: 위치 정보, 만들거나 참여한 모임, 채팅 내용, 친구 목록\n\n2. 쓰는 목적\n- 회원 확인과 로그인\n- 모임 만들기, 참여하기, 참여자 확인\n- 지도에서 주변 모임 보여주기\n- 채팅과 친구 기능\n\n3. 위치 정보\n- 위치 권한을 허용한 경우에만 사용해요.\n- 내 위치는 지도에 보여주는 데만 쓰고 저장하지 않아요.\n- 모임을 만들 때 고른 장소의 위치와 주소는 모임 정보로 저장되어 다른 회원에게 보여요.\n\n4. 다른 회원에게 보이는 정보\n닉네임, 한 줄 소개, 프로필 사진, 내가 만든 모임 정보는 다른 회원에게 보일 수 있어요. 휴대폰 번호는 보이지 않아요.\n\n5. 정보를 맡기는 곳\n- Google Firebase: 로그인, 데이터 저장\n- Google 지도: 지도 표시, 장소 검색\n\n6. 보관과 삭제\n탈퇴하면 개인정보를 바로 삭제해요.\n\n7. 문의\n할래말래? 개발팀 (팀 이메일 입력 예정)" />
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

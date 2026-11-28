@@ -34,6 +34,20 @@
                 android:layout_height="wrap_content"
                 android:nestedScrollingEnabled="false" />
 
+            <!-- 다가오는 일정이 없을 때 -->
+            <TextView
+                android:id="@+id/tvUpcomingEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_status_card_white"
+                android:gravity="center"
+                android:padding="16dp"
+                android:text="다가오는 일정이 없어요"
+                android:textColor="#777777"
+                android:textSize="13sp"
+                android:visibility="gone" />
+
             <TextView
                 android:id="@+id/textView5"
                 android:layout_width="match_parent"
@@ -51,6 +65,20 @@
                 android:nestedScrollingEnabled="false"
                 tools:listitem="@layout/schedule_list_item" />
 
+            <!-- 참여 중인 모임이 없을 때 -->
+            <TextView
+                android:id="@+id/tvJoinedEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_status_card_white"
+                android:gravity="center"
+                android:padding="16dp"
+                android:text="참여 중인 모임이 없어요"
+                android:textColor="#777777"
+                android:textSize="13sp"
+                android:visibility="gone" />
+
             <TextView
                 android:id="@+id/textView7"
                 android:layout_width="match_parent"
@@ -67,6 +95,20 @@
                 android:layout_height="wrap_content"
                 android:nestedScrollingEnabled="false"
                 tools:listitem="@layout/schedule_list_item" />
+
+            <!-- 내가 연 모임이 없을 때 -->
+            <TextView
+                android:id="@+id/tvCreatedEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_status_card_white"
+                android:gravity="center"
+                android:padding="16dp"
+                android:text="내가 연 모임이 없어요"
+                android:textColor="#777777"
+                android:textSize="13sp"
+                android:visibility="gone" />
 
         </LinearLayout>
 

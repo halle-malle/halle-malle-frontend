@@ -19,7 +19,8 @@ class upcomingItemViewHolder(
 class upcomingListAdapter (
     private val onItemClickChat: (GroupData) -> Unit,
     private val onItemClickDetail: (GroupData) -> Unit,
-    private val toast: (String) -> Unit // 어답터 클래스 안에서 토스트 창을 띄워야 할 때 호출하는 함수
+    private val toast: (String) -> Unit, // 어답터 클래스 안에서 토스트 창을 띄워야 할 때 호출하는 함수
+    private val onLoaded: (Int) -> Unit // 다 불러오면 모임 개수를 알려주는 함수
 
 ) : RecyclerView.Adapter<upcomingItemViewHolder>() {
 
@@ -41,7 +42,16 @@ class upcomingListAdapter (
     ) {
         val item = list[position]
 
-        holder.binding.tvPlace.text = "${DateFormat.format("MM.dd (E) HH:mm", item.dateTime)}|${item.place}"
+        // 모임 일시
+        holder.binding.tvDday.text = DateFormat.format("MM.dd (E) HH:mm", item.dateTime)
+
+        // 모집 상태
+        holder.binding.tvConfirmed.text = when (item.status) {
+            GroupData.STATUS_CONFIRMED -> "모집 확정"
+            else -> "모집 중"
+        }
+
+        holder.binding.tvPlace.text = item.place
         holder.binding.tvTitle.text = item.title
         holder.binding.tvNotice.text = "멤버 ${item.memberCount}/${item.maxMember}명"
         holder.binding.btnChat.text = "그룹 채팅"
@@ -76,6 +86,7 @@ class upcomingListAdapter (
             dbList.sortBy { it.dateTime }   // 날짜 가까운 순
             list = dbList
             notifyDataSetChanged()
+            onLoaded(list.size)
         }
         task.addOnFailureListener {
             toast("읽기 실패")

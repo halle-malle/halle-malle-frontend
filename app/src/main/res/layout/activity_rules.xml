@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:fitsSystemWindows="true"
+    tools:context=".RulesActivity">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/rulesToolbar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        app:navigationIcon="@drawable/outline_arrow_back_24"
+        app:title="사용 규칙"
+        app:titleTextColor="@color/black"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/rulesToolbar"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="20dp"
+            android:lineSpacingExtra="4dp"
+            android:textColor="#222222"
+            android:textSize="14sp"
+            android:text="할래말래?를 함께 쓰는 모두가 즐겁게 모일 수 있도록 아래 규칙을 지켜주세요.\n\n1. 실제로 나갈 모임만 만들어요\n장난이나 거짓 모임은 다른 사람의 시간을 뺏어요. 모임 이름, 일시, 장소는 정확하게 적어주세요.\n\n2. 참여했다면 약속을 지켜요\n모임 시간에 늦지 않게 와주세요. 못 가게 되면 모임이 확정되기 전에 미리 나가주세요.\n\n3. 안전하게 만나요\n처음 만나는 사람과는 사람이 많은 공공장소에서 만나요. 개인 연락처나 집 주소는 함부로 알려주지 마세요.\n\n4. 서로 존중해요\n욕설, 비방, 성희롱, 차별하는 말은 안 돼요. 채팅에서도 똑같이 지켜주세요.\n\n5. 광고와 홍보는 안 돼요\n물건 판매, 가게 홍보, 다른 앱이나 모임 홍보를 위한 모임은 만들 수 없어요.\n\n6. 모임에서 생긴 일은 서로 책임져요\n할래말래?는 모임을 연결해 줄 뿐이에요. 모임에서 생긴 다툼이나 피해는 참여한 사람끼리 해결해야 해요.\n\n규칙을 지키지 않으면 모임이나 채팅이 삭제되거나 앱 이용이 제한될 수 있어요." />
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

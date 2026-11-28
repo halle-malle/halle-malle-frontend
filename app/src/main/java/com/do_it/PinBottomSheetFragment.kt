@@ -72,8 +72,15 @@ class PinBottomSheetFragment : BottomSheetDialogFragment() {
         val newMemberIds = item.memberIds.toMutableList()
         newMemberIds.add(uid)
 
+        // 내가 마지막 자리면 모집 확정으로 바꾸기 (아니면 상태는 건드리지 않기)
+        val isLast = item.memberCount + 1 >= item.maxMember
+
         val ref = db.collection("groups").document(item.id)
-        val task = ref.update("memberIds", newMemberIds, "memberCount", item.memberCount + 1)
+        val task = if (isLast) {
+            ref.update("memberIds", newMemberIds, "memberCount", item.memberCount + 1, "status", GroupData.STATUS_CONFIRMED)
+        } else {
+            ref.update("memberIds", newMemberIds, "memberCount", item.memberCount + 1)
+        }
         task.addOnSuccessListener {
             ref.collection("members").document(uid).set(memberData(
                 meetingId = item.id,
@@ -84,7 +91,11 @@ class PinBottomSheetFragment : BottomSheetDialogFragment() {
                 joinedAt = System.currentTimeMillis()
                 )
             )
-            Toast.makeText(context, "모임에 참여했어요!", Toast.LENGTH_SHORT).show()
+            if (isLast) {
+                Toast.makeText(context, "모임에 참여했어요! 인원이 다 차서 모임이 확정됐어요.", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "모임에 참여했어요!", Toast.LENGTH_SHORT).show()
+            }
             dismiss()
         }
         task.addOnFailureListener {

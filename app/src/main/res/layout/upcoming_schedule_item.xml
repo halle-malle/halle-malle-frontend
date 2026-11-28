@@ -25,26 +25,14 @@
             android:textSize="12sp" />
 
         <TextView
-            android:background="@drawable/bg_status_card_white"
+            android:background="@drawable/bg_status_card_black"
             android:id="@+id/tvConfirmed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingHorizontal="8dp"
             android:paddingVertical="4dp"
 
-            android:text="모임 확정"
-            android:textSize="11sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:background="@drawable/bg_status_card_black"
-            android:id="@+id/tvJoined"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="4dp"
-            android:text="참여 중"
+            android:text="모집 확정"
             android:textColor="@android:color/background_light"
             android:textSize="11sp"
             android:textStyle="bold" />

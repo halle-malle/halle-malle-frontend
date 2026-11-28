@@ -49,6 +49,7 @@ class SelectLocationActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private var selectedLatLng: LatLng? = null   // 지도에서 찍은 위치
     private var address = ""   // 핀 찍은 곳 주소
+    private var placeName = ""   // 장소 이름 (장소 아이콘을 눌렀으면 그 이름, 아니면 주소)
     private var pinTitle = ""   // 내 핀에 보여줄 모임 이름
     private var pinCategory = ""   // 내 핀에 보여줄 카테고리
 
@@ -92,7 +93,7 @@ class SelectLocationActivity : AppCompatActivity(), OnMapReadyCallback {
             placeLauncher.launch(intent)
         }
 
-        // 핀 찍기 버튼 : 찍은 위치, 주소를 모임 만들기 화면으로 보내기
+        // 핀 찍기 버튼 : 찍은 위치, 주소, 장소 이름을 모임 만들기 화면으로 보내기
         binding.btnSelect.setOnClickListener {
             val latLng = selectedLatLng
             if (latLng == null) {
@@ -103,6 +104,7 @@ class SelectLocationActivity : AppCompatActivity(), OnMapReadyCallback {
             rIntent.putExtra("latitude", latLng.latitude)
             rIntent.putExtra("longitude", latLng.longitude)
             rIntent.putExtra("address", address)
+            rIntent.putExtra("placeName", placeName)
             setResult(RESULT_OK, rIntent)
             finish()
         }
@@ -134,15 +136,27 @@ class SelectLocationActivity : AppCompatActivity(), OnMapReadyCallback {
             showAddress(latLng)
             mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng))
         }
+
+        // 지도에 있는 장소 아이콘(건물, 가게 등)을 누르면 그 장소 이름으로 핀 찍기
+        mMap.setOnPoiClickListener { poi ->
+            selectedLatLng = poi.latLng   // 찍은 위치 저장
+            showMarkers()
+            showAddress(poi.latLng)
+            placeName = poi.name   // 장소 이름은 아이콘 이름으로
+            binding.tvPlaceSearch.text = poi.name
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(poi.latLng))
+        }
     }
 
     // Firestore에서 모집중(0), 확정(1)인 모임을 불러와서 핀 다시 찍기
     private fun loadGroups() {
         val task = db.collection("groups").whereIn("status", listOf(0, 1)).get()
         task.addOnSuccessListener {
+            val now = System.currentTimeMillis()
             groupList.clear()
             for (document in it) {
                 val item = document.toObject(GroupData::class.java)
+                if (item.dateTime < now) continue   // 지난 모임 건너뛰기
                 groupList.add(item)
             }
             showMarkers()
@@ -183,12 +197,13 @@ class SelectLocationActivity : AppCompatActivity(), OnMapReadyCallback {
             val list = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
             if (list != null && list.isNotEmpty()) {
                 address = list[0].getAddressLine(0)
-                binding.tvAddress.text = address
+                binding.tvPlaceSearch.text = address
             }
         } catch (e: IOException) {
             address = ""
-            binding.tvAddress.text = "주소를 불러올 수 없어요"
+            binding.tvPlaceSearch.text = "주소를 불러올 수 없어요"
         }
+        placeName = address   // 장소 이름은 처음엔 주소로
     }
 
     // 모임 이름 들어간 핀 만들기
