@@ -75,7 +75,8 @@ service cloud.firestore {
     }
 
     match /groups/{groupId}/members/{memberId} {
-      allow read, create, update: if signedIn();
+      allow read, create, update: if signedIn()
+        && exists(/databases/$(database)/documents/groups/$(groupId));
       // 본인 탈퇴 또는 방장 강퇴 (방장 자신의 멤버 문서는 삭제 불가)
       allow delete: if signedIn()
         && get(/databases/$(database)/documents/groups/$(groupId)).data.hostId != memberId
@@ -84,7 +85,8 @@ service cloud.firestore {
     }
 
     match /groups/{groupId}/chats/{chatId} {
-      allow read, create, update: if signedIn();
+      allow read, create, update: if signedIn()
+        && exists(/databases/$(database)/documents/groups/$(groupId));
     }
 
     match /groups/{groupId}/cancelVotes/{uid} {

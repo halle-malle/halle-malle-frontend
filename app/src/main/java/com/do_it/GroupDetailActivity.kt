@@ -244,16 +244,21 @@ class GroupDetailActivity : AppCompatActivity() {
                 return@addSnapshotListener
             }
 
-            val canApprove = item.dateTime > System.currentTimeMillis() &&
-                item.maxMember > 0 &&
-                (item.hostId == uid || uid in item.memberIds) &&
+            val participants = (item.memberIds + item.hostId).filter { it.isNotBlank() }.toSet()
+            val beforeStart = item.dateTime > System.currentTimeMillis()
+            val canDelete = beforeStart && item.hostId == uid && participants.size == 1 &&
+                item.memberCount <= 1 &&
                 (item.status == GroupData.STATUS_RECRUITING || item.status == GroupData.STATUS_CONFIRMED)
+            showSoloDelete(groupId, canDelete)
+
+            val canApprove = beforeStart && item.status == GroupData.STATUS_RECRUITING &&
+                participants.size > 1 && uid in participants
             binding.btnCancelVote.visibility = if (canApprove) View.VISIBLE else View.GONE
             val version = ++ballotRequestVersion
             if (!canApprove) return@addSnapshotListener
 
             cancellationCount = group.getLong("cancelApprovalCount") ?: 0L
-            cancellationRequired = if (item.maxMember == 2) 1L else item.maxMember / 2L + 1L
+            cancellationRequired = participants.size / 2L + 1L
             updateCancellationButton()
 
             val round = group.getLong("cancelVoteRound") ?: 0L
@@ -266,6 +271,41 @@ class GroupDetailActivity : AppCompatActivity() {
                 myCancellationApproval = ballot.getBoolean("approve") == true
                 updateCancellationButton()
             }
+        }
+    }
+
+    private fun showSoloDelete(groupId: String, canDelete: Boolean) {
+        if (!canDelete) {
+            if (binding.btnDeleteGroup.text == "모임 삭제") {
+                binding.btnDeleteGroup.visibility = View.GONE
+            }
+            return
+        }
+
+        binding.btnDeleteGroup.text = "모임 삭제"
+        binding.btnDeleteGroup.visibility = View.VISIBLE
+        binding.btnDeleteGroup.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("모임 삭제")
+                .setMessage("혼자 참여 중인 모임을 삭제할까요?")
+                .setNegativeButton("닫기", null)
+                .setPositiveButton("삭제") { _, _ ->
+                    binding.btnDeleteGroup.isEnabled = false
+                    FirebaseFunctions.getInstance("asia-northeast3")
+                        .getHttpsCallable("deleteSoloGroup")
+                        .call(mapOf("groupId" to groupId))
+                        .addOnCompleteListener { task ->
+                            if (isFinishing || isDestroyed) return@addOnCompleteListener
+                            binding.btnDeleteGroup.isEnabled = true
+                            if (task.isSuccessful) {
+                                Toast.makeText(this, "모임을 삭제했어요.", Toast.LENGTH_SHORT).show()
+                                finish()
+                            } else {
+                                Toast.makeText(this, task.exception?.message ?: "모임을 삭제하지 못했어요.", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                }
+                .show()
         }
     }
 

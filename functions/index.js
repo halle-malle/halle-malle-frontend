@@ -324,6 +324,44 @@ exports.clearNotificationHistory = onCall(
     },
 );
 
+exports.deleteSoloGroup = onCall({region: "asia-northeast3"}, async (req) => {
+  if (!req.auth) throw new HttpsError("unauthenticated", "로그인이 필요해요.");
+  const groupId = req.data && req.data.groupId;
+  if (typeof groupId !== "string" || !groupId || groupId.includes("/") ||
+      groupId === "." || groupId === "..") {
+    throw new HttpsError("invalid-argument", "잘못된 모임 요청이에요.");
+  }
+
+  const db = getFirestore();
+  const ref = db.collection("groups").doc(groupId);
+  await db.runTransaction(async (transaction) => {
+    const group = await transaction.get(ref);
+    if (!group.exists) throw new HttpsError("not-found", "이미 삭제된 모임이에요.");
+    const uid = req.auth.uid;
+    const members = group.get("memberIds");
+    if (group.get("hostId") !== uid || !Array.isArray(members) ||
+        members.some((member) => member !== uid) ||
+        group.get("memberCount") > 1) {
+      throw new HttpsError("permission-denied", "방장 혼자 있는 모임만 삭제할 수 있어요.");
+    }
+    const status = group.get("status");
+    if ((status !== 0 && status !== 1) || group.get("dateTime") <= Date.now()) {
+      throw new HttpsError("failed-precondition", "시작 전 모임만 삭제할 수 있어요.");
+    }
+    transaction.delete(ref);
+  });
+
+  try {
+    const children = await ref.listCollections();
+    for (const collection of children) {
+      await db.recursiveDelete(collection);
+    }
+  } catch (error) {
+    logger.error("Solo group cleanup failed", {groupId, code: error.code});
+  }
+  return {deleted: true};
+});
+
 exports.castGroupCancellationVote = onCall(
     {region: "asia-northeast3"},
     async (req) => {
@@ -354,16 +392,15 @@ exports.castGroupCancellationVote = onCall(
           throw new HttpsError("permission-denied", "참가자만 투표할 수 있어요.");
         }
         const status = group.get("status");
-        if ((status !== 0 && status !== 1) ||
+        if (status !== 0 ||
             group.get("dateTime") <= Date.now()) {
           throw new HttpsError("failed-precondition", "투표가 종료된 모임이에요.");
         }
 
-        const capacity = group.get("maxMember");
-        if (!Number.isSafeInteger(capacity) || capacity < 1) {
-          throw new HttpsError("failed-precondition", "모임 정원을 확인해주세요.");
+        if (participants.size < 2) {
+          throw new HttpsError("failed-precondition", "혼자라면 모임을 삭제할 수 있어요.");
         }
-        const required = capacity === 2 ? 1 : Math.floor(capacity / 2) + 1;
+        const required = Math.floor(participants.size / 2) + 1;
         const round = group.get("cancelVoteRound") || 0;
         const rounds = groupRef.collection("cancelVotes");
         const votes = round === 0 ? rounds :
