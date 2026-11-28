@@ -20,6 +20,14 @@ class detailMemberAdapter (
     private val onItemClickAddFriend: (memberData) -> Unit
 ): RecyclerView.Adapter<detailMemberViewHolder>() {
 
+    private var friendIds = emptySet<String>()
+
+    fun updateFriends(ids: Set<String>) {
+        if (friendIds == ids) return
+        friendIds = ids
+        notifyDataSetChanged()
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): detailMemberViewHolder {
         val binding = GroupDetailMemberListItemBinding.inflate(
             LayoutInflater.from(parent.context),
@@ -47,8 +55,9 @@ class detailMemberAdapter (
             }
             else -> "오류"
         }
-        if (item.userId == auth.currentUser?.uid) {
+        if (item.userId == auth.currentUser?.uid || item.userId in friendIds) {
             holder.binding.btnAddFriend.visibility = View.GONE
+            holder.binding.btnAddFriend.setOnClickListener(null)
         } else {
             holder.binding.btnAddFriend.visibility = View.VISIBLE
             holder.binding.btnAddFriend.setOnClickListener {

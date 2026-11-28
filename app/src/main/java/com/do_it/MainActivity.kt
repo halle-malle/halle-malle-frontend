@@ -39,6 +39,7 @@ class MainActivity : AppCompatActivity() {
 
         requestNotificationPermission()
         refreshFcmToken()
+        NotificationPreferences.syncPushSetting(this)
         val navView = binding.navView
 
         val navHostFragment = supportFragmentManager
@@ -75,11 +76,15 @@ class MainActivity : AppCompatActivity() {
             if (item.itemId == R.id.my) showMyPage()
         }
 
-        binding.btnNotification.setOnClickListener {
-            navController.navigate(R.id.notification_SettingsFragment)
-        }
+        NotificationHistory.bind(this, binding.btnNotification, ::openNotification)
 
         if (savedInstanceState == null) openNotification(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        openNotification(intent)
     }
 
     private fun openNotification(source: Intent) {
@@ -96,7 +101,8 @@ class MainActivity : AppCompatActivity() {
         if (groupId.isBlank() || '/' in groupId) return
         val destination = when (type) {
             "group_chat" -> GroupChatActivity::class.java
-            "group_application", "group_membership", "group_approval", "group_start" -> GroupDetailActivity::class.java
+            "group_application", "group_membership", "group_approval", "group_start",
+            "group_cancellation" -> GroupDetailActivity::class.java
             else -> return
         }
 

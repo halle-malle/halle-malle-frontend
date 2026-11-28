@@ -21,6 +21,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     // 메시지 수신
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
+        if (!NotificationPreferences.isPushEnabled(this)) return
         val data = message.data
         if (data["type"] == "group_chat" &&
             GroupChatActivity.isViewing(data["groupId"], data["recipientUid"])

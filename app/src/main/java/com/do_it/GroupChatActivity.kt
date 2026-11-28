@@ -40,6 +40,7 @@ class GroupChatActivity : AppCompatActivity() {
 
         binding = ActivityGroupChatBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        NotificationHistory.bind(this, binding.btnNotification)
 
         val gIntent = getIntent()
         val groupId = gIntent.getStringExtra("groupId")   // 넘겨받은 모임 id
