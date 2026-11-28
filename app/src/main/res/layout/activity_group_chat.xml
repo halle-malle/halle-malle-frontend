@@ -75,17 +75,9 @@
             android:gravity="center"
             android:orientation="horizontal">
 
-            <ImageButton
-                android:id="@+id/btnOptions"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="전송"
-                android:padding="12dp"
-                android:src="@drawable/ic_add_circle" />
-
             <EditText
                 android:id="@+id/editTextText"
+                android:layout_marginStart="8dp"
                 android:background="@drawable/bg_card"
                 android:minHeight="55dp"
                 android:maxHeight="55dp"

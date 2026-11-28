@@ -3,6 +3,7 @@ package com.do_it
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.do_it.MyApplication.Companion.auth
 import com.do_it.MyApplication.Companion.db
 import com.do_it.databinding.FriendInvitaionListItemBinding
@@ -40,6 +41,15 @@ class friendInvitationListAdapter (
 
         holder.binding.tvTitle.text = item.nickname
         holder.binding.imageView.setImageResource(R.drawable.ic_person)
+        // 이미지가 있으면 프로필 사진 표시
+        if(item.profileImageUrl.isNotBlank()) {
+            val rqMngr = Glide.with(holder.binding.root)
+            val rqBuilder = rqMngr.load(item.profileImageUrl)
+            rqBuilder.placeholder(R.drawable.ic_person)
+            rqBuilder.error(R.drawable.ic_person)
+            rqBuilder.override(300, 300)
+            rqBuilder.into(holder.binding.imageView)
+        }
         // XML에서 btnChat = 거절, btnDetail = 수락
         holder.binding.btnChat.setOnClickListener {
             reject(item)

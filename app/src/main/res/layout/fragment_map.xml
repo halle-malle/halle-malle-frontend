@@ -49,6 +49,7 @@
             android:layout_marginStart="15dp"
             android:background="@null"
             android:hint="어떤 모임을 찾으시나요?"
+            android:imeOptions="actionSearch"
             android:inputType="text"
             android:textColor="#222222"
             android:textColorHint="#AEAEB2"

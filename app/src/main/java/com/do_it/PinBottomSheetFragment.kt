@@ -1,5 +1,6 @@
 package com.do_it
 
+import com.bumptech.glide.Glide
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.view.LayoutInflater
@@ -174,7 +175,15 @@ class PinBottomSheetFragment : BottomSheetDialogFragment() {
                     binding.tvHost.text = "방장"
                 } else {
                     binding.tvHost.text = "${user.nickname} (방장)"
-                    ProfileImageLoader.load(binding.ivHost, user.profileImageUrl)
+                    // 이미지가 있으면 프로필 사진 표시
+                    if(user.profileImageUrl.isNotBlank()) {
+                        val rqMngr = Glide.with(binding.root)
+                        val rqBuilder = rqMngr.load(user.profileImageUrl)
+                        rqBuilder.placeholder(R.drawable.ic_person)
+                        rqBuilder.error(R.drawable.ic_person)
+                        rqBuilder.override(300, 300)
+                        rqBuilder.into(binding.ivHost)
+                    }
                 }
             }
         }
@@ -188,7 +197,15 @@ class PinBottomSheetFragment : BottomSheetDialogFragment() {
                 memberTask.addOnSuccessListener {
                     val user = it.toObject(userData::class.java)
                     if (user != null) {
-                        ProfileImageLoader.load(memberViews[i], user.profileImageUrl)
+                        // 이미지가 있으면 프로필 사진 표시
+                        if(user.profileImageUrl.isNotBlank()) {
+                            val rqMngr = Glide.with(binding.root)
+                            val rqBuilder = rqMngr.load(user.profileImageUrl)
+                            rqBuilder.placeholder(R.drawable.ic_person)
+                            rqBuilder.error(R.drawable.ic_person)
+                            rqBuilder.override(300, 300)
+                            rqBuilder.into(memberViews[i])
+                        }
                     }
                 }
             } else {

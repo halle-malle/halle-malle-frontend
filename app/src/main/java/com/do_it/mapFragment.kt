@@ -10,6 +10,7 @@ import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultCallback
@@ -86,7 +87,7 @@ class mapFragment : Fragment(), OnMapReadyCallback {
         val location = LatLng(37.5000, 126.8663)
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15.0f))
 
-        // 모집중(0), 확정(1)인 모임 불러와서 목록에 저장한 뒤 핀 찍기
+        // 모집 중인 모임 불러와서 목록에 저장한 뒤 핀 찍기
         loadGroups()
 
         // 위치 권한 확인 후 내 위치 표시
@@ -115,30 +116,17 @@ class mapFragment : Fragment(), OnMapReadyCallback {
             selectFilter(binding.filterEtc, "기타")
         }
 
-        // 검색 : 제목이나 주소에 검색어가 들어간 모임을 바텀시트 목록으로 보여주기
+        // 검색 : 돋보기를 누르거나 키보드 검색 버튼을 누르면 검색
         binding.ivSearch.setOnClickListener {
-            val keyword = binding.etSearch.text.toString().trim()
-            if (keyword.isEmpty()) {
-                Toast.makeText(context, "검색어를 입력해주세요.", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+            searchGroups()
+        }
+        binding.etSearch.setOnEditorActionListener { v, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                searchGroups()
+                true
+            } else {
+                false
             }
-
-            val results = groupList.filter { it.title.contains(keyword) || it.place.contains(keyword) || it.address.contains(keyword) }
-            if (results.isEmpty()) {
-                Toast.makeText(context, "검색 결과가 없어요.", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            val sheet = SearchBottomSheetFragment()
-            sheet.title = "'${keyword}' 검색 결과 ${results.size}개"
-            sheet.results = results
-            // 결과를 누르면 그 모임 위치로 이동하고 모임 정보 바텀시트 띄우기
-            sheet.onItemClick = { item ->
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(item.latitude, item.longitude), 16.0f))
-                showPinSheet(item.id)
-            }
-            sheet.setStyle(DialogFragment.STYLE_NORMAL, R.style.AppBottomSheetDialogBorder20WhiteTheme)
-            sheet.show(parentFragmentManager, "search")
         }
 
         // 핀을 누르면 바텀시트로 모임 정보 보여주기
@@ -169,6 +157,32 @@ class mapFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
+    // 제목이나 주소에 검색어가 들어간 모임을 바텀시트 목록으로 보여주기
+    private fun searchGroups() {
+        val keyword = binding.etSearch.text.toString().trim()
+        if (keyword.isEmpty()) {
+            Toast.makeText(context, "검색어를 입력해주세요.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val results = groupList.filter { it.title.contains(keyword) || it.place.contains(keyword) || it.address.contains(keyword) }
+        if (results.isEmpty()) {
+            Toast.makeText(context, "검색 결과가 없어요.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val sheet = SearchBottomSheetFragment()
+        sheet.title = "'${keyword}' 검색 결과 ${results.size}개"
+        sheet.results = results
+        // 결과를 누르면 그 모임 위치로 이동하고 모임 정보 바텀시트 띄우기
+        sheet.onItemClick = { item ->
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(item.latitude, item.longitude), 16.0f))
+            showPinSheet(item.id)
+        }
+        sheet.setStyle(DialogFragment.STYLE_NORMAL, R.style.AppBottomSheetDialogBorder20WhiteTheme)
+        sheet.show(parentFragmentManager, "search")
+    }
+
     // 모임 정보 바텀시트 띄우기
     private fun showPinSheet(groupId: String) {
         val sheet = PinBottomSheetFragment()
@@ -195,9 +209,9 @@ class mapFragment : Fragment(), OnMapReadyCallback {
         showMarkers()
     }
 
-    // Firestore에서 모집중(0), 확정(1)인 모임을 불러와서 핀 다시 찍기
+    // Firestore에서 모집 중인 모임을 불러와서 핀 다시 찍기
     private fun loadGroups() {
-        val task = db.collection("groups").whereIn("status", listOf(0, 1)).get()
+        val task = db.collection("groups").whereEqualTo("status", GroupData.STATUS_RECRUITING).get()
         task.addOnSuccessListener {
             val now = System.currentTimeMillis()
             groupList.clear()
