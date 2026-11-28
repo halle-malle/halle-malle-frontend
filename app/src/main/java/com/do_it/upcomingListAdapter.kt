@@ -48,10 +48,13 @@ class upcomingListAdapter (
         // 모집 상태
         if (item.dateTime < System.currentTimeMillis()) {
             holder.binding.tvConfirmed.text = "모임 중"
+            holder.binding.tvConfirmed.setBackgroundResource(R.drawable.bg_badge_ongoing)
         } else if (item.status == GroupData.STATUS_CONFIRMED) {
             holder.binding.tvConfirmed.text = "모집 확정"
+            holder.binding.tvConfirmed.setBackgroundResource(R.drawable.bg_badge_confirmed)
         } else {
             holder.binding.tvConfirmed.text = "모집 중"
+            holder.binding.tvConfirmed.setBackgroundResource(R.drawable.bg_badge_recruiting)
         }
 
         holder.binding.tvPlace.text = item.place

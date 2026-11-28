@@ -121,10 +121,12 @@ class PinBottomSheetFragment : BottomSheetDialogFragment() {
         }
 
         // 모집 상태
-        binding.tvStatus.text = when (item.status) {
-            GroupData.STATUS_RECRUITING -> "모집 중"
-            GroupData.STATUS_CONFIRMED -> "모집 확정"
-            else -> "종료"
+        if (item.status == GroupData.STATUS_CONFIRMED) {
+            binding.tvStatus.text = "모집 확정"
+            binding.tvStatus.setBackgroundResource(R.drawable.bg_badge_confirmed)
+        } else {
+            binding.tvStatus.text = "모집 중"
+            binding.tvStatus.setBackgroundResource(R.drawable.bg_badge_recruiting)
         }
 
         // 일시

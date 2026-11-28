@@ -127,12 +127,16 @@ class GroupDetailActivity : AppCompatActivity() {
             val past = item.status == GroupData.STATUS_FINISHED || item.dateTime + GroupData.END_TIME < System.currentTimeMillis()
             if (past) {
                 binding.tvMeetupState.text = "지난 모임"
+                binding.tvMeetupState.setBackgroundResource(R.drawable.bg_badge_past)
             } else if (started) {
                 binding.tvMeetupState.text = "모임 중"
+                binding.tvMeetupState.setBackgroundResource(R.drawable.bg_badge_ongoing)
             } else if (item.status == GroupData.STATUS_CONFIRMED) {
                 binding.tvMeetupState.text = "모집 확정"
+                binding.tvMeetupState.setBackgroundResource(R.drawable.bg_badge_confirmed)
             } else {
                 binding.tvMeetupState.text = "모집 중"
+                binding.tvMeetupState.setBackgroundResource(R.drawable.bg_badge_recruiting)
             }
             binding.tvDate.text = if (item.dateTime == 0L) "일시 미정" else DateFormat.format("yyyy.MM.dd EEEE HH:mm", item.dateTime)
             binding.tvPlace.text = if (item.place.isEmpty()) "동양미래대학교 인근" else item.place
@@ -155,6 +159,7 @@ class GroupDetailActivity : AppCompatActivity() {
                             finishTask.addOnSuccessListener {
                                 Toast.makeText(baseContext, "모임이 종료되었어요.", Toast.LENGTH_SHORT).show()
                                 binding.tvMeetupState.text = "지난 모임"
+                                binding.tvMeetupState.setBackgroundResource(R.drawable.bg_badge_past)
                                 binding.btnDeleteGroup.visibility = View.GONE
                             }
                             finishTask.addOnFailureListener {
@@ -179,6 +184,7 @@ class GroupDetailActivity : AppCompatActivity() {
                                 confirmTask.addOnSuccessListener {
                                     Toast.makeText(baseContext, "모임이 확정되었어요.", Toast.LENGTH_SHORT).show()
                                     binding.tvMeetupState.text = "모집 확정"
+                                    binding.tvMeetupState.setBackgroundResource(R.drawable.bg_badge_confirmed)
                                     binding.btnConfirmGroup.visibility = View.GONE
                                 }
                                 confirmTask.addOnFailureListener {

@@ -84,7 +84,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginRight="7dp"
                 android:padding="3dp"
-                android:background="@drawable/bg_status_card_white"
+                android:background="@drawable/bg_badge_confirmed"
+                android:textColor="#FFFFFF"
                 android:text="모집 확정" />
 
         </LinearLayout>
