@@ -44,11 +44,11 @@ service cloud.firestore {
         && request.resource.data.hostId == request.auth.uid
         && request.resource.data.memberIds == [request.auth.uid]
         && request.resource.data.status == 0
-        && !request.resource.data.keys().hasAny(['canceledByVote', 'cancelVoteUpdatedAt']);
+        && !request.resource.data.keys().hasAny(['canceledByVote', 'cancelVoteUpdatedAt', 'cancelVoteRound']);
       allow delete: if false;
       allow update: if signedIn()
         && !request.resource.data.diff(resource.data).affectedKeys()
-             .hasAny(['hostId', 'canceledByVote', 'cancelVoteUpdatedAt'])
+             .hasAny(['hostId', 'canceledByVote', 'cancelVoteUpdatedAt', 'cancelVoteRound'])
         && resource.data.status != 2
         && request.resource.data.status != 2
         && (changesOnlyOwnMembership()

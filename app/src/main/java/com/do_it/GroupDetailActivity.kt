@@ -8,7 +8,7 @@ import android.text.format.DateFormat
 import android.view.View
 import android.widget.Toast
 import com.google.firebase.functions.FirebaseFunctions
-import com.google.firebase.functions.FirebaseFunctionsException
+import com.google.firebase.firestore.Source
 import com.do_it.MyApplication.Companion.auth
 import com.do_it.MyApplication.Companion.db
 import androidx.activity.enableEdgeToEdge
@@ -61,6 +61,35 @@ class GroupDetailActivity : AppCompatActivity() {
         }
     }
 
+
+    private fun submitCancellationVote(
+        binding: ActivityGroupDetailBinding, groupId: String, round: Long, approve: Boolean
+    ) {
+        binding.btnCancelVote.isEnabled = false
+        FirebaseFunctions.getInstance("asia-northeast3")
+            .getHttpsCallable("castGroupCancellationVote")
+            .call(mapOf("groupId" to groupId, "round" to round, "approve" to approve))
+            .addOnCompleteListener(this) { vote ->
+                binding.btnCancelVote.isEnabled = true
+                if (!vote.isSuccessful) {
+                    Toast.makeText(this, vote.exception?.message ?: "투표하지 못했어요.", Toast.LENGTH_SHORT).show()
+                    return@addOnCompleteListener
+                }
+                val result = vote.result.data as? Map<*, *>
+                val message = when {
+                    result?.get("canceled") == true -> {
+                        binding.tvMeetupState.text = "모임 취소"
+                        binding.btnCancelVote.visibility = View.GONE
+                        binding.btnDeleteGroup.visibility = View.GONE
+                        binding.btnGroupChat.visibility = View.GONE
+                        "모임이 취소되었습니다."
+                    }
+                    result?.get("rejected") == true -> "취소 투표가 부결됐어요. 다시 투표할 수 있어요."
+                    else -> "투표 완료 · 찬성 ${result?.get("yes")}표 / 필요 ${result?.get("required")}표"
+                }
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+            }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -154,42 +183,24 @@ class GroupDetailActivity : AppCompatActivity() {
             ) {
                 binding.btnCancelVote.visibility = View.VISIBLE
                 binding.btnCancelVote.setOnClickListener {
-                    val submitVote: (Boolean) -> Unit = { approve ->
-                        binding.btnCancelVote.isEnabled = false
-                        FirebaseFunctions.getInstance("asia-northeast3")
-                            .getHttpsCallable("castGroupCancellationVote")
-                            .call(mapOf("groupId" to groupId, "approve" to approve))
-                            .addOnCompleteListener(this) { vote ->
-                                if (vote.isSuccessful) {
-                                    val result = vote.result.data as? Map<*, *>
-                                    binding.btnCancelVote.visibility = View.GONE
-                                    if (result?.get("canceled") == true) {
-                                        binding.tvMeetupState.text = "모임 취소"
-                                        binding.btnDeleteGroup.visibility = View.GONE
-                                        binding.btnGroupChat.visibility = View.GONE
-                                        Toast.makeText(this, "모임이 취소되었습니다.", Toast.LENGTH_SHORT).show()
-                                    } else {
-                                        val yes = result?.get("yes")
-                                        val required = result?.get("required")
-                                        Toast.makeText(this, "투표 완료 · 찬성 ${yes}표 / 필요 ${required}표", Toast.LENGTH_SHORT).show()
-                                    }
-                                } else {
-                                    val error = vote.exception as? FirebaseFunctionsException
-                                    binding.btnCancelVote.isEnabled = true
-                                    if (error?.code == FirebaseFunctionsException.Code.ALREADY_EXISTS) {
-                                        binding.btnCancelVote.visibility = View.GONE
-                                    }
-                                    Toast.makeText(this, error?.message ?: "투표하지 못했어요.", Toast.LENGTH_SHORT).show()
-                                }
+                    db.collection("groups").document(groupId).get(Source.SERVER)
+                        .addOnSuccessListener(this) { group ->
+                            if (!group.exists() || group.getLong("status") == GroupData.STATUS_CANCELED.toLong()) {
+                                binding.btnCancelVote.visibility = View.GONE
+                                return@addOnSuccessListener
                             }
-                    }
-                    AlertDialog.Builder(this)
-                        .setTitle("모임 취소 투표")
-                        .setMessage("2명 모임은 찬성 1표, 그 외에는 방장 포함 참가자 과반이 필요해요. 투표는 한 번만 할 수 있어요.")
-                        .setPositiveButton("찬성") { _, _ -> submitVote(true) }
-                        .setNegativeButton("반대") { _, _ -> submitVote(false) }
-                        .setNeutralButton("닫기", null)
-                        .show()
+                            val round = group.getLong("cancelVoteRound") ?: 0L
+                            AlertDialog.Builder(this)
+                                .setTitle("모임 취소 투표")
+                                .setMessage("2명 모임은 찬성 1표, 그 외에는 방장 포함 참가자 과반이 필요해요. 회차마다 한 번 투표할 수 있어요.")
+                                .setPositiveButton("찬성") { _, _ -> submitCancellationVote(binding, groupId, round, true) }
+                                .setNegativeButton("반대") { _, _ -> submitCancellationVote(binding, groupId, round, false) }
+                                .setNeutralButton("닫기", null)
+                                .show()
+                        }
+                        .addOnFailureListener(this) {
+                            Toast.makeText(this, "투표 상태를 불러오지 못했어요.", Toast.LENGTH_SHORT).show()
+                        }
                 }
             }
 

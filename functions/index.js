@@ -237,15 +237,15 @@ exports.castGroupCancellationVote = onCall(
       if (!req.auth) {
         throw new HttpsError("unauthenticated", "로그인이 필요해요.");
       }
-      const {groupId, approve} = req.data || {};
+      const {groupId, approve, round} = req.data || {};
       if (typeof groupId !== "string" || !groupId || groupId.includes("/") ||
-          groupId === "." || groupId === ".." || typeof approve !== "boolean") {
+          groupId === "." || groupId === ".." || typeof approve !== "boolean" ||
+          !Number.isSafeInteger(round) || round < 0) {
         throw new HttpsError("invalid-argument", "잘못된 투표 요청이에요.");
       }
       const uid = req.auth.uid;
       const db = getFirestore();
       const groupRef = db.collection("groups").doc(groupId);
-      const votes = groupRef.collection("cancelVotes");
       return db.runTransaction(async (transaction) => {
         const group = await transaction.get(groupRef);
         if (!group.exists) {
@@ -263,22 +263,47 @@ exports.castGroupCancellationVote = onCall(
           throw new HttpsError("failed-precondition", "투표가 종료된 모임이에요.");
         }
 
-        const ballots = await transaction.get(votes);
-        if (ballots.docs.some((doc) => doc.id === uid)) {
-          throw new HttpsError("already-exists", "이미 투표했어요.");
+        const activeRound = group.get("cancelVoteRound") || 0;
+        if (round !== activeRound) {
+          throw new HttpsError("aborted", "투표 회차가 바뀌었어요. 다시 선택해주세요.");
         }
-        const yes = ballots.docs.filter((doc) =>
-          participants.has(doc.id) && doc.get("approve") === true,
-        ).length + (approve ? 1 : 0);
+        const rounds = groupRef.collection("cancelVotes");
+        // Round zero retains votes already recorded by earlier app builds.
+        const votes = round === 0 ? rounds :
+          rounds.doc(String(round)).collection("ballots");
+        const snapshot = await transaction.get(votes);
+        const ballots = snapshot.docs.filter((doc) => participants.has(doc.id));
         const required = participants.size === 2 ? 1 :
           Math.floor(participants.size / 2) + 1;
+        const previousYes = ballots.filter((doc) =>
+          doc.get("approve") === true,
+        ).length;
+        if (previousYes >= required) {
+          transaction.update(groupRef, {status: 2, canceledByVote: true});
+          return {yes: previousYes, required, canceled: true, rejected: false};
+        }
+        const previousNo = ballots.length - previousYes;
+        if (participants.size - previousNo < required) {
+          transaction.update(groupRef, {cancelVoteRound: round + 1});
+          return {canceled: false, rejected: true};
+        }
+        if (ballots.some((doc) => doc.id === uid)) {
+          throw new HttpsError("already-exists", "이 회차에 이미 투표했어요.");
+        }
+        const yes = previousYes + (approve ? 1 : 0);
+        const no = previousNo + (approve ? 0 : 1);
         const canceled = yes >= required;
+        const rejected = participants.size - no < required;
         transaction.create(votes.doc(uid), {approve});
-        // Serialize votes even when the group is not yet canceled.
-        transaction.update(groupRef, canceled ? {
-          status: 2, canceledByVote: true,
-        } : {cancelVoteUpdatedAt: FieldValue.serverTimestamp()});
-        return {yes, required, canceled};
+        const update = {cancelVoteUpdatedAt: FieldValue.serverTimestamp()};
+        if (canceled) {
+          update.status = 2;
+          update.canceledByVote = true;
+        } else if (rejected) {
+          update.cancelVoteRound = round + 1;
+        }
+        transaction.update(groupRef, update);
+        return {yes, required, canceled, rejected};
       });
     },
 );
