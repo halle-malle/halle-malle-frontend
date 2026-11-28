@@ -8,7 +8,9 @@ import com.do_it.MyApplication.Companion.auth
 import com.do_it.MyApplication.Companion.db
 import com.do_it.databinding.FriendListItemBinding
 import com.do_it.databinding.UpcomingScheduleItemBinding
+import com.google.android.play.integrity.internal.q
 import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.Query
 
 class friendItemViewHolder(
@@ -20,6 +22,7 @@ class friendItemViewHolder(
 class friendListAdapter (
     private val onItemClickChat: (userData) -> Unit,
     private val onItemClickDetail: (userData) -> Unit,
+    private val onItemLongClick: (userData) -> Unit,
     private val toast: (String) -> Unit // 어답터 클래스 안에서 토스트 창을 띄워야 할 때 호출하는 함수
 
 ) : RecyclerView.Adapter<friendItemViewHolder>() {
@@ -47,6 +50,13 @@ class friendListAdapter (
         holder.binding.btnChat.setOnClickListener {
             onItemClickChat(item)
         }
+        holder.binding.root.setOnLongClickListener {
+            onItemLongClick(item)
+            return@setOnLongClickListener true
+        }
+
+
+
     }
 
     override fun getItemCount(): Int {
@@ -71,7 +81,7 @@ class friendListAdapter (
             notifyDataSetChanged()
             for (document in it) {
                 // 문서 id = 친구 uid
-                db.collection("users").document(document.id).get().addOnSuccessListener {
+                db.collection( "users").document(document.id).get().addOnSuccessListener {
                     val user = it.toObject(userData::class.java)
                     if (user != null) {
                         list.add(user)
@@ -85,4 +95,49 @@ class friendListAdapter (
         }
     }
 
+    fun deleteFriend(item: userData) {
+        val uid = auth.currentUser?.uid ?: return
+
+        // firestore에서 친구 삭제 : 내 friends에서 친구, 친구 friends에서 나
+        val colref : CollectionReference = db.collection("users").document(uid).collection("friends")
+        val docref : DocumentReference = colref.document(item.id)
+        val task = docref.delete()
+        task.addOnSuccessListener {
+            db.collection("users").document(item.id).collection("friends").document(uid).delete()
+            toast("친구 삭제 완료")
+            list.remove(item)
+            notifyDataSetChanged()
+        }
+        task.addOnFailureListener { error ->
+            toast("친구 삭제에 실패했습니다: ${error.localizedMessage}")
+        }
+    }
+
+    fun reportFriend(item: userData) {
+        // firestore에서 신고 횟수 읽어서 1 올리기 : 문서 id = 신고당한 사람 uid
+        val colref : CollectionReference = db.collection("reports")
+        val docref : DocumentReference = colref.document(item.id)
+        val task = docref.get()
+        task.addOnSuccessListener {
+            val report = it.toObject(reportData::class.java)
+            var count = 0
+            if (report != null)   // 처음 신고당하는 경우는 문서가 없어서 null
+                count = report.count
+
+            val task2 = docref.set(reportData(
+                userId = item.id,
+                count = count + 1,
+                reportedAt = System.currentTimeMillis()
+            ))
+            task2.addOnSuccessListener {
+                toast("신고가 접수되었습니다.")
+            }
+            task2.addOnFailureListener { error ->
+                toast("신고에 실패했습니다: ${error.localizedMessage}")
+            }
+        }
+        task.addOnFailureListener { error ->
+            toast("신고에 실패했습니다: ${error.localizedMessage}")
+        }
+    }
 }

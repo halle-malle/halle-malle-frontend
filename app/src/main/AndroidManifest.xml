@@ -24,6 +24,9 @@
             android:name=".GroupChatActivity"
             android:exported="false" />
         <activity
+            android:name=".PersonalChatActivity"
+            android:exported="false" />
+        <activity
             android:name=".GroupDetailActivity"
             android:exported="false" />
 
