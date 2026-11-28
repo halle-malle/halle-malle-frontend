@@ -25,8 +25,7 @@ class Notification_SettingsFragment : Fragment() {
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (isAdded) {
-            preferences().edit().putBoolean("push_enabled", granted).apply()
-            refreshPush()
+            savePushSetting(granted)
             if (!granted) Toast.makeText(requireContext(),
                 "알림을 받으려면 휴대폰 알림 설정에서 허용해주세요.", Toast.LENGTH_SHORT).show()
         }
@@ -79,8 +78,7 @@ class Notification_SettingsFragment : Fragment() {
 
     private fun changePush(checked: Boolean) {
         if (!checked) {
-            preferences().edit().putBoolean("push_enabled", false).apply()
-            refreshPush()
+            savePushSetting(false)
         } else if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(
                 requireContext(), Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             refreshPush()
@@ -91,9 +89,14 @@ class Notification_SettingsFragment : Fragment() {
                 .setNegativeButton("취소", null)
                 .setPositiveButton("설정 열기") { _, _ -> openSystemSettings() }.show()
         } else {
-            preferences().edit().putBoolean("push_enabled", true).apply()
-            refreshPush()
+            savePushSetting(true)
         }
+    }
+
+    private fun savePushSetting(enabled: Boolean) {
+        preferences().edit().putBoolean("push_enabled", enabled).apply()
+        NotificationPreferences.syncPushSetting(requireContext())
+        refreshPush()
     }
 
     private fun openSystemSettings() {
