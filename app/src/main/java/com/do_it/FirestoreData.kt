@@ -54,7 +54,7 @@ data class GroupData(
         const val STATUS_RECRUITING = 0  // 모집중
         const val STATUS_CONFIRMED = 1   // 확정
         const val STATUS_CANCELED = 2    // 취소
-        const val STATUS_FINISHED = 3    // 종료
+        const val STATUS_FINISHED = 3    // 종료 (방장이 모임 종료를 누르면 지난 모임)
     }
 }
 

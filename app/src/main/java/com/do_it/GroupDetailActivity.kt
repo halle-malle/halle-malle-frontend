@@ -122,9 +122,12 @@ class GroupDetailActivity : AppCompatActivity() {
 
             binding.tvGroupName.text = item.title
             binding.tvCategory.text = if (item.category.isEmpty()) "기타" else item.category
-            // 모집 상태 (시간이 지났으면 지난 모임)
-            if (item.dateTime < System.currentTimeMillis()) {
+            // 모집 상태 (종료 → 지난 모임, 시작 시간이 지났으면 모임 중)
+            val started = item.dateTime < System.currentTimeMillis()
+            if (item.status == GroupData.STATUS_FINISHED) {
                 binding.tvMeetupState.text = "지난 모임"
+            } else if (started) {
+                binding.tvMeetupState.text = "모임 중"
             } else if (item.status == GroupData.STATUS_CONFIRMED) {
                 binding.tvMeetupState.text = "모집 확정"
             } else {
@@ -135,11 +138,36 @@ class GroupDetailActivity : AppCompatActivity() {
             binding.tvMember.text = "${item.memberCount}/${item.maxMember}명"
             binding.textView22.text = "함께하는 멤버 (${item.memberCount})"
 
-            // 하단 버튼 : 방장은 모임 삭제, 일반 참여자는 모임 탈퇴, 미참여자는 숨김
+            // 하단 버튼
+            // 시작 전 : 방장은 확정·삭제, 참여자는 탈퇴 / 모임 중 : 방장만 모임 종료 / 지난 모임 : 버튼 없음
             val uid = auth.currentUser?.uid
-            if (item.hostId == uid) {
-                // 모임 확정 버튼 : 모집 중이고 아직 안 지난 모임일 때만 보이기
-                if (item.status == GroupData.STATUS_RECRUITING && item.dateTime >= System.currentTimeMillis()) {
+            if (started && item.status != GroupData.STATUS_FINISHED && item.hostId == uid) {
+                binding.btnDeleteGroup.text = "모임 종료"
+                binding.btnDeleteGroup.visibility = View.VISIBLE
+                // 모임 종료 버튼 : 한 번 더 물어보고 종료 (종료하면 지난 모임으로)
+                binding.btnDeleteGroup.setOnClickListener {
+                    val builder = AlertDialog.Builder(this)
+                    builder.setTitle("모임 종료")
+                    builder.setMessage("모임을 종료할까요? 종료하면 지난 모임으로 옮겨져요.")
+                    builder.setPositiveButton("종료", object: DialogInterface.OnClickListener {
+                        override fun onClick(dialog: DialogInterface?, which: Int) {
+                            val finishTask = db.collection("groups").document(groupId).update("status", GroupData.STATUS_FINISHED)
+                            finishTask.addOnSuccessListener {
+                                Toast.makeText(baseContext, "모임이 종료되었어요.", Toast.LENGTH_SHORT).show()
+                                binding.tvMeetupState.text = "지난 모임"
+                                binding.btnDeleteGroup.visibility = View.GONE
+                            }
+                            finishTask.addOnFailureListener {
+                                Toast.makeText(baseContext, "종료 실패", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    })
+                    builder.setNegativeButton("취소", null)
+                    builder.show()
+                }
+            } else if (!started && item.hostId == uid) {
+                // 모임 확정 버튼 : 모집 중일 때만 보이기
+                if (item.status == GroupData.STATUS_RECRUITING) {
                     binding.btnConfirmGroup.visibility = View.VISIBLE
                     binding.btnConfirmGroup.setOnClickListener {
                         val builder = AlertDialog.Builder(this)
@@ -178,7 +206,7 @@ class GroupDetailActivity : AppCompatActivity() {
                     builder.setNegativeButton("취소", null)
                     builder.show()
                 }
-            } else if (uid != null && item.memberIds.contains(uid)) {
+            } else if (!started && uid != null && item.memberIds.contains(uid)) {
                 binding.btnDeleteGroup.text = "모임 탈퇴"
                 binding.btnDeleteGroup.visibility = View.VISIBLE
                 // 모임 탈퇴 버튼 : 확정된 모임은 나갈 수 없고, 아니면 한 번 더 물어보고 탈퇴

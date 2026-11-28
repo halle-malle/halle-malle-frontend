@@ -45,10 +45,13 @@ class upcomingListAdapter (
         // 모임 일시
         holder.binding.tvDday.text = DateFormat.format("MM.dd (E) HH:mm", item.dateTime)
 
-        // 모집 상태
-        holder.binding.tvConfirmed.text = when (item.status) {
-            GroupData.STATUS_CONFIRMED -> "모집 확정"
-            else -> "모집 중"
+        // 모집 상태 (시작 시간이 지났으면 모임 중)
+        if (item.dateTime < System.currentTimeMillis()) {
+            holder.binding.tvConfirmed.text = "모임 중"
+        } else if (item.status == GroupData.STATUS_CONFIRMED) {
+            holder.binding.tvConfirmed.text = "모집 확정"
+        } else {
+            holder.binding.tvConfirmed.text = "모집 중"
         }
 
         holder.binding.tvPlace.text = item.place
@@ -68,7 +71,7 @@ class upcomingListAdapter (
         return list.size
     }
     fun loadItems() {
-        // 내가 참여한 모임 중 모집중(0), 확정(1)이고 아직 안 지난 것을 가까운 순으로
+        // 내가 참여한 모임 중 모집중(0), 확정(1)인 것을 가까운 순으로 (종료된 모임은 빠짐)
         val uid = auth.currentUser?.uid ?: return
         val colref: CollectionReference = db.collection("groups")
 
@@ -76,11 +79,9 @@ class upcomingListAdapter (
             .whereIn("status", listOf(0, 1))
         val task = query.get()
         task.addOnSuccessListener {
-            val now = System.currentTimeMillis()
             val dbList = mutableListOf<GroupData>()
             for (document in it) {
                 val item = document.toObject(GroupData::class.java)
-                if (item.dateTime < now) continue   // 지난 모임 건너뛰기
                 dbList.add(item)
             }
             dbList.sortBy { it.dateTime }   // 날짜 가까운 순

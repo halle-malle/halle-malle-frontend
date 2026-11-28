@@ -78,7 +78,7 @@ class Previous_meetingFragment : Fragment() {
                 for (document in task.result) {
                     val item = document.toObject(GroupData::class.java).copy(id = document.id)
                     if (item.status == GroupData.STATUS_CANCELED) continue
-                    if (item.status == GroupData.STATUS_FINISHED || (item.dateTime > 0L && item.dateTime < now)) {
+                    if (item.status == GroupData.STATUS_FINISHED) {
                         meetings.add(item)
                     }
                 }
