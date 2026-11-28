@@ -402,6 +402,7 @@ class LoginActivity : AppCompatActivity() {
                     mainIntent.putExtra("type", intent.getStringExtra("type"))
                     mainIntent.putExtra("groupId", intent.getStringExtra("groupId"))
                     mainIntent.putExtra("recipientUid", user.uid)
+                    mainIntent.putExtra("notificationId", intent.getStringExtra("notificationId"))
                 }
                 startActivity(mainIntent)
                 finish()

@@ -117,7 +117,7 @@ class SelectLocationActivity : AppCompatActivity(), OnMapReadyCallback {
         val location = LatLng(37.5000, 126.8663)
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15.0f))
 
-        // 모집중(0), 확정(1)인 모임 불러와서 목록에 저장한 뒤 핀 찍기
+        // 모집 중인 모임 불러와서 목록에 저장한 뒤 핀 찍기
         loadGroups()
 
         // 내 위치 표시
@@ -148,9 +148,9 @@ class SelectLocationActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    // Firestore에서 모집중(0), 확정(1)인 모임을 불러와서 핀 다시 찍기
+    // Firestore에서 모집 중인 모임을 불러와서 핀 다시 찍기
     private fun loadGroups() {
-        val task = db.collection("groups").whereIn("status", listOf(0, 1)).get()
+        val task = db.collection("groups").whereEqualTo("status", GroupData.STATUS_RECRUITING).get()
         task.addOnSuccessListener {
             val now = System.currentTimeMillis()
             groupList.clear()

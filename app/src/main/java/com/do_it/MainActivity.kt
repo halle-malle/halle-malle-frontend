@@ -76,7 +76,7 @@ class MainActivity : AppCompatActivity() {
             if (item.itemId == R.id.my) showMyPage()
         }
 
-        NotificationHistory.bind(this, binding.btnNotification, ::openNotification)
+        NotificationHistoryActivity.bind(this, binding.btnNotification)
 
         if (savedInstanceState == null) openNotification(intent)
     }
@@ -90,6 +90,7 @@ class MainActivity : AppCompatActivity() {
     private fun openNotification(source: Intent) {
         val uid = auth.currentUser?.uid ?: return
         if (source.getStringExtra("recipientUid") != uid) return
+        source.getStringExtra("notificationId")?.let { NotificationHistoryActivity.markAsRead(it) }
 
         val type = source.getStringExtra("type")
         if (type == "friend_request") {

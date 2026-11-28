@@ -47,6 +47,8 @@ class CreateMeetingActivity : AppCompatActivity(), OnMapReadyCallback {
     private var date: LocalDate = LocalDate.now()   // 선택한 날짜
     private val calendar = Calendar.getInstance()   // 선택한 시간 저장 (처음엔 현재 시간)
     private var dateTime = 0L   // 선택한 모임 일시 (0이면 아직 선택 안 함)
+    private var editId: String? = null   // 수정할 모임 id (null이면 새 모임)
+    private var memberCount = 1   // 수정할 모임의 지금 인원
 
     // 위치 선택 화면에서 찍은 위치, 주소 받기
     private val locationLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -58,13 +60,52 @@ class CreateMeetingActivity : AppCompatActivity(), OnMapReadyCallback {
             binding.tvAddress.text = rIntent.getStringExtra("address") ?: ""
             binding.etPlaceName.setText(rIntent.getStringExtra("placeName") ?: "")
 
-            // 미리보기 지도에 고른 위치 핀 찍고 그 위치 보여주기
-            mMap.clear()
-            val options = MarkerOptions()
-            options.position(selectedLatLng!!)
-            options.icon(BitmapDescriptorFactory.fromBitmap(createMarker()))
-            mMap.addMarker(options)
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(selectedLatLng!!, 16.0f))
+            showPreviewPin()
+        }
+    }
+
+    // 미리보기 지도에 고른 위치 핀 찍고 그 위치 보여주기
+    private fun showPreviewPin() {
+        mMap.clear()
+        val options = MarkerOptions()
+        options.position(selectedLatLng!!)
+        options.icon(BitmapDescriptorFactory.fromBitmap(createMarker()))
+        mMap.addMarker(options)
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(selectedLatLng!!, 16.0f))
+    }
+
+    // 수정할 모임 정보 불러와서 입력칸 채우기
+    private fun loadGroup(groupId: String) {
+        val task = MyApplication.db.collection("groups").document(groupId).get()
+        task.addOnSuccessListener {
+            val item = it.toObject(GroupData::class.java)
+            if (item == null) return@addOnSuccessListener
+
+            binding.etMeetingTitle.setText(item.title)
+            when (item.category) {
+                "스터디" -> selectCategory(binding.catStudy, "스터디")
+                "맛집" -> selectCategory(binding.catFood, "맛집")
+                "취미" -> selectCategory(binding.catHobby, "취미")
+                "기타" -> selectCategory(binding.catEtc, "기타")
+                else -> selectCategory(binding.catSports, "운동")
+            }
+
+            dateTime = item.dateTime
+            calendar.timeInMillis = dateTime
+            date = LocalDate.of(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH))
+            binding.tvMeetingDate.text = DateFormat.format("yyyy.MM.dd EEEE HH:mm", dateTime)
+
+            selectedLatLng = LatLng(item.latitude, item.longitude)
+            binding.tvAddress.text = item.address
+            binding.etPlaceName.setText(item.place)
+            binding.seekBarMember.progress = item.maxMember
+            binding.etDetail.setText(item.description)
+            memberCount = item.memberCount
+
+            if (::mMap.isInitialized) showPreviewPin()
+        }
+        task.addOnFailureListener {
+            Toast.makeText(baseContext, "모임 정보를 불러오지 못했어요.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -135,6 +176,15 @@ class CreateMeetingActivity : AppCompatActivity(), OnMapReadyCallback {
         setSupportActionBar(binding.acmToolbar)
         binding.acmToolbar.setNavigationOnClickListener {
             finish()
+        }
+
+        // 모임 상세에서 수정하기로 들어왔으면 수정 모드
+        editId = intent.getStringExtra("groupId")
+        val id = editId
+        if (id != null) {
+            binding.acmToolbar.title = "모임 수정"
+            binding.btnCreate.text = "수정하기"
+            loadGroup(id)
         }
 
         // 미리보기 지도 연결
@@ -219,6 +269,39 @@ class CreateMeetingActivity : AppCompatActivity(), OnMapReadyCallback {
                     Toast.makeText(baseContext, "장소 이름을 입력해주세요.", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
+                // 수정 모드 : 바뀐 내용만 저장
+                val id = editId
+                if (id != null) {
+                    if (binding.seekBarMember.progress < memberCount) {
+                        Toast.makeText(baseContext, "모집 정원은 지금 인원(${memberCount}명)보다 적을 수 없어요.", Toast.LENGTH_SHORT).show()
+                        return@setOnClickListener
+                    }
+                    val editTask = MyApplication.db.collection("groups").document(id).update(
+                        "title", title,
+                        "category", category,
+                        "description", binding.etDetail.text.toString(),
+                        "dateTime", dateTime,
+                        "place", placeName,
+                        "address", binding.tvAddress.text.toString(),
+                        "maxMember", binding.seekBarMember.progress,
+                        "latitude", latLng.latitude,
+                        "longitude", latLng.longitude
+                    )
+                    editTask.addOnSuccessListener {
+                        // 정원이 지금 인원과 같으면 모집 확정
+                        if (binding.seekBarMember.progress == memberCount) {
+                            MyApplication.db.collection("groups").document(id).update("status", GroupData.STATUS_CONFIRMED)
+                        }
+                        Toast.makeText(baseContext, "모임을 수정했어요.", Toast.LENGTH_SHORT).show()
+                        setResult(RESULT_OK)
+                        finish()
+                    }
+                    editTask.addOnFailureListener {
+                        Toast.makeText(baseContext, "모임을 수정하지 못했어요.", Toast.LENGTH_SHORT).show()
+                    }
+                    return@setOnClickListener
+                }
+
                 val ref = MyApplication.db.collection("groups").document()
 
                 val group = GroupData(
@@ -267,6 +350,9 @@ class CreateMeetingActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.setOnMapClickListener {
             openSelectLocation()
         }
+
+        // 수정 모드에서 모임 정보가 먼저 불러와졌으면 핀 찍기
+        if (selectedLatLng != null) showPreviewPin()
 
         showMyLocation()
     }

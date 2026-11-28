@@ -15,7 +15,9 @@
             android:background="@drawable/bg_avatar"
             android:id="@+id/imageView"
             android:layout_width="41dp"
-            android:layout_height="45dp"
+            android:layout_height="41dp"
+            android:scaleType="centerCrop"
+            android:clipToOutline="true"
             app:srcCompat="@drawable/ic_person" />
 
         <LinearLayout

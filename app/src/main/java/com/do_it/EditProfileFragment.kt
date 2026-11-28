@@ -1,5 +1,6 @@
 package com.do_it
 
+import com.bumptech.glide.Glide
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -108,9 +109,15 @@ class EditProfileFragment : Fragment() {
                     ?: document.getString("profileImage")
                     ?: ""
 
-                ProfileImageLoader.load(
-                    currentBinding.imageProfile, imageUrl
-                )
+                // 이미지가 있으면 프로필 사진 표시
+                if(imageUrl.isNotBlank()) {
+                    val rqMngr = Glide.with(currentBinding.root)
+                    val rqBuilder = rqMngr.load(imageUrl)
+                    rqBuilder.placeholder(R.drawable.ic_person)
+                    rqBuilder.error(R.drawable.ic_person)
+                    rqBuilder.override(300, 300)
+                    rqBuilder.into(currentBinding.imageProfile)
+                }
 
                 loaded = true
                 setEnabled(true)

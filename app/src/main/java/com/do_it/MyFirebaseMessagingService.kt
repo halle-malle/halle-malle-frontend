@@ -29,6 +29,12 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             return
         }
 
+        if (data["type"] == "group_cancellation" &&
+            GroupDetailActivity.isViewing(data["groupId"], data["recipientUid"])
+        ) {
+            return
+        }
+
         val title = message.notification?.title ?: "할래말래?"
         val body = message.notification?.body ?: ""
 
@@ -61,6 +67,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         intent.putExtra("type", data["type"])
         intent.putExtra("groupId", data["groupId"])
         intent.putExtra("recipientUid", data["recipientUid"])
+        intent.putExtra("notificationId", data["notificationId"])
 
         val pendingIntent = PendingIntent.getActivity(
             this, notificationId, intent,

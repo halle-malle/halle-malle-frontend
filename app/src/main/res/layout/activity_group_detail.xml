@@ -66,34 +66,57 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="6dp"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tv_category"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="7dp"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="6dp"
+                    android:background="@drawable/bg_status_card_white"
+                    android:textColor="#222222"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:text="운동" />
+
+                <TextView
+                    android:id="@+id/tv_meetup_state"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="7dp"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="6dp"
+                    android:background="@drawable/bg_badge_confirmed"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:text="모집 확정" />
+            </LinearLayout>
+
+            <!-- 모임 수정 버튼 -->
             <TextView
-                android:id="@+id/tv_category"
+                android:id="@+id/btnEditGroup"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="7dp"
-                android:paddingHorizontal="10dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_btn_edit"
+                android:paddingHorizontal="12dp"
                 android:paddingVertical="6dp"
-                android:background="@drawable/bg_status_card_white"
-                android:textColor="#222222"
-                android:textSize="11sp"
+                android:text="모임 수정"
+                android:textColor="#3E6123"
+                android:textSize="13sp"
                 android:textStyle="bold"
-                android:text="운동" />
-
-            <TextView
-                android:id="@+id/tv_meetup_state"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginRight="7dp"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="6dp"
-                android:background="@drawable/bg_badge_confirmed"
-                android:textColor="#FFFFFF"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:text="모집 확정" />
-
+                android:visibility="gone"
+                tools:visibility="visible" />
         </LinearLayout>
 
         <TextView
@@ -107,7 +130,7 @@
             android:text="대강당에서 배드민턴 할래?" />
 
         <LinearLayout
-            android:padding="10dp"
+            android:padding="8dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="14dp"
@@ -115,6 +138,7 @@
             android:orientation="vertical">
 
             <LinearLayout
+                android:layout_marginTop="10dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
@@ -260,38 +284,58 @@
             android:layout_height="0dp"
             android:layout_weight="1" />
 
-        <!-- 모임 확정 버튼 (방장이고 모집 중일 때만 보임) -->
-        <Button
-            android:id="@+id/btnConfirmGroup"
+        <!-- 하단 버튼 (한 줄로 나란히, 상황에 맞는 버튼만 보임) -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:background="@drawable/bg_status_card_black"
-            android:text="모임 확정"
-            android:textColor="@color/white"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
+            android:orientation="horizontal">
 
-        <!-- 하단 버튼 (방장: 모임 삭제 / 참여자: 모임 탈퇴, 코드에서 글자 바꿈) -->
-        <Button
-            android:id="@+id/btnCancelVote"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:text="모임 취소 투표"
-            android:visibility="gone" />
+            <TextView
+                android:id="@+id/btnConfirmGroup"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_marginHorizontal="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_status_card_black"
+                android:gravity="center"
+                android:text="모임 확정"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                tools:visibility="visible" />
 
-        <Button
-            android:id="@+id/btnDeleteGroup"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/bg_status_card_black"
-            android:text="모임 삭제"
-            android:textColor="@color/white"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
+            <TextView
+                android:id="@+id/btnDeleteGroup"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_marginHorizontal="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_status_card_black"
+                android:gravity="center"
+                android:text="모임 탈퇴"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/btnCancelVote"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_marginHorizontal="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_status_card_white"
+                android:gravity="center"
+                android:text="모임 취소"
+                android:textColor="#222222"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                tools:visibility="visible" />
+        </LinearLayout>
 
     </LinearLayout>
 

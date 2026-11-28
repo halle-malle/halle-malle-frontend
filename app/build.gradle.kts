@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.play.services.maps)
     implementation(libs.google.location)
     implementation(libs.google.places)
+    implementation(libs.glide)
 
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:34.16.0"))
