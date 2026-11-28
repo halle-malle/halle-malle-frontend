@@ -397,7 +397,13 @@ class LoginActivity : AppCompatActivity() {
             } else {
                 binding.textVerificationStatus.text = "로그인 성공"
                 toast("로그인 성공")
-                startActivity(Intent(this, MainActivity::class.java))
+                val mainIntent = Intent(this, MainActivity::class.java)
+                if (intent.getStringExtra("recipientUid") == user.uid) {
+                    mainIntent.putExtra("type", intent.getStringExtra("type"))
+                    mainIntent.putExtra("groupId", intent.getStringExtra("groupId"))
+                    mainIntent.putExtra("recipientUid", user.uid)
+                }
+                startActivity(mainIntent)
                 finish()
             }
         }
