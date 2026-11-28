@@ -1,59 +1,101 @@
 package com.do_it
 
+import android.content.Intent
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.do_it.MyApplication.Companion.auth
+import com.do_it.MyApplication.Companion.db
+import com.do_it.databinding.FragmentPreviousMeetingBinding
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [Previous_meetingFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class Previous_meetingFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+    private var _binding: FragmentPreviousMeetingBinding? = null
+    private val binding get() = _binding!!
+    private lateinit var meetingAdapter: listAdapter
+    private var requestNumber = 0
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        _binding = FragmentPreviousMeetingBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        meetingAdapter = listAdapter(
+            { item ->
+                val intent = Intent(requireContext(), GroupDetailActivity::class.java)
+                intent.putExtra("groupId", item.id)
+                startActivity(intent)
+            },
+            { message -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show() },
+            { count -> _binding?.tvMeetingCount?.text = "${count}개의 모임" }
+        )
+        binding.rvPastMeetings.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvPastMeetings.adapter = meetingAdapter
+        binding.buttonRetry.setOnClickListener { loadPastMeetings() }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadPastMeetings()
+    }
+
+    private fun loadPastMeetings() {
+        val currentBinding = _binding ?: return
+        val request = ++requestNumber
+        val uid = auth.currentUser?.uid
+        if (uid == null) {
+            meetingAdapter.setItems(emptyList())
+            currentBinding.progressLoading.visibility = View.GONE
+            currentBinding.tvMeetingCount.text = "0개의 모임"
+            currentBinding.tvListStatus.text = "로그인 후 참여했던 모임을 볼 수 있어요."
+            currentBinding.tvListStatus.visibility = View.VISIBLE
+            currentBinding.buttonRetry.visibility = View.GONE
+            return
         }
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_previous_meeting, container, false)
-    }
-
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment Previous_meetingFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            Previous_meetingFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+        currentBinding.progressLoading.visibility = View.VISIBLE
+        currentBinding.tvListStatus.visibility = View.GONE
+        currentBinding.buttonRetry.visibility = View.GONE
+        currentBinding.tvMeetingCount.text = "불러오는 중"
+        db.collection("groups").whereArrayContains("memberIds", uid).get()
+            .addOnCompleteListener { task ->
+                if (_binding !== currentBinding || request != requestNumber || auth.currentUser?.uid != uid)
+                    return@addOnCompleteListener
+                currentBinding.progressLoading.visibility = View.GONE
+                if (!task.isSuccessful) {
+                    meetingAdapter.setItems(emptyList())
+                    currentBinding.tvMeetingCount.text = "조회 실패"
+                    currentBinding.tvListStatus.text = "목록을 불러오지 못했어요. 네트워크를 확인해주세요."
+                    currentBinding.tvListStatus.visibility = View.VISIBLE
+                    currentBinding.buttonRetry.visibility = View.VISIBLE
+                    return@addOnCompleteListener
+                }
+                val now = System.currentTimeMillis()
+                val meetings = mutableListOf<GroupData>()
+                for (document in task.result) {
+                    val item = document.toObject(GroupData::class.java).copy(id = document.id)
+                    if (item.status == GroupData.STATUS_CANCELED) continue
+                    if (item.status == GroupData.STATUS_FINISHED || (item.dateTime > 0L && item.dateTime < now)) {
+                        meetings.add(item)
+                    }
+                }
+                meetings.sortByDescending { it.dateTime }
+                meetingAdapter.setItems(meetings)
+                currentBinding.tvMeetingCount.text = "${meetings.size}개의 모임"
+                if (meetings.isEmpty()) {
+                    currentBinding.tvListStatus.text = "아직 지난 모임이 없어요."
+                    currentBinding.tvListStatus.visibility = View.VISIBLE
                 }
             }
+    }
+
+    override fun onDestroyView() {
+        requestNumber++
+        _binding?.rvPastMeetings?.adapter = null
+        _binding = null
+        super.onDestroyView()
     }
 }

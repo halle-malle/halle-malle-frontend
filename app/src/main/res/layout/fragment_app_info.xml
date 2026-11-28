@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/white">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:padding="24dp" android:orientation="vertical">
+        <TextView android:id="@+id/tvInfoTitle" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:textSize="20sp" android:textStyle="bold" android:textColor="#222222" />
+        <TextView android:id="@+id/tvInfoBody" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="24dp" android:textSize="15sp" android:textColor="#555555" android:lineSpacingExtra="8dp" />
+    </LinearLayout>
+</ScrollView>

@@ -7,7 +7,7 @@
     android:background="@color/white"
     tools:context=".mypageFragment">
 
-    <androidx.core.widget.NestedScrollView
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true">
@@ -32,7 +32,9 @@
                     android:layout_width="64dp"
                     android:layout_height="64dp"
                     android:background="@drawable/bg_card"
-                    android:padding="12dp"
+                    android:padding="0dp"
+                    android:scaleType="centerCrop"
+                    android:clipToOutline="true"
                     android:src="@drawable/ic_person"
                     android:contentDescription="프로필 사진" />
 
@@ -43,14 +45,31 @@
                     android:layout_weight="1"
                     android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tvNickname"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Nickname"
-                        android:textColor="#222222"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:id="@+id/tvNickname"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:maxLines="1"
+                            android:ellipsize="end"
+                            android:text="닉네임"
+                            android:textColor="#222222"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+                        <Button
+                            android:id="@+id/buttonEditProfile"
+                            android:layout_width="wrap_content"
+                            android:layout_height="48dp"
+                            android:minWidth="64dp"
+                            android:backgroundTint="#EEE7F8"
+                            android:textColor="#53416C"
+                            android:text="수정" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/tvIntroduction"
@@ -155,212 +174,156 @@
 
             <LinearLayout
                 android:id="@+id/menuFriends"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:minHeight="70dp" android:paddingVertical="12dp"
                 android:layout_marginTop="20dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginEnd="12dp"
-                    android:src="@drawable/ic_friends"
-                    android:contentDescription="친구" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="친구"
-                    android:textColor="#222222"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_arrow_forward"
-                    android:contentDescription="친구 목록" />
-
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#E5E5EA" />
-
-            <LinearLayout
-                android:id="@+id/menuCreatedMeetups"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:minHeight="70dp"
-                android:paddingVertical="12dp">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginEnd="12dp"
-                    android:src="@drawable/ic_meetup_manage"
-                    android:contentDescription="모임 관리" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="내가 연 모임 관리"
-                        android:textColor="#222222"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="참여자 확인 · 모집 확정 · 모임 취소"
-                        android:textColor="#777777"
-                        android:textSize="12sp" />
-
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+                <ImageView android:layout_width="24dp" android:layout_height="24dp"
+                    android:layout_marginEnd="12dp" android:src="@drawable/ic_friends"
+                    android:importantForAccessibility="no" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:text="친구" android:textColor="#222222"
+                        android:textSize="14sp" android:textStyle="bold" />
                 </LinearLayout>
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_arrow_forward"
-                    android:contentDescription="내가 연 모임 관리" />
-
+                <ImageView android:layout_width="24dp" android:layout_height="24dp"
+                    android:src="@drawable/ic_arrow_forward" android:importantForAccessibility="no" />
             </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#E5E5EA" />
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E5EA" />
 
             <LinearLayout
                 android:id="@+id/menuPastMeetups"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:minHeight="70dp"
-                android:paddingVertical="12dp">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginEnd="12dp"
-                    android:src="@drawable/ic_history"
-                    android:contentDescription="지난 모임" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="지난 모임"
-                        android:textColor="#222222"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="참여 기록과 함께한 사람"
-                        android:textColor="#777777"
-                        android:textSize="12sp" />
-
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:minHeight="70dp" android:paddingVertical="12dp"
+                
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+                <ImageView android:layout_width="24dp" android:layout_height="24dp"
+                    android:layout_marginEnd="12dp" android:src="@drawable/ic_history"
+                    android:importantForAccessibility="no" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:text="지난 모임" android:textColor="#222222"
+                        android:textSize="14sp" android:textStyle="bold" />
+                    <TextView 
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp" android:text="참여했던 모임 목록 · 상세 보기"
+                        android:textColor="#777777" android:textSize="12sp" />
                 </LinearLayout>
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_arrow_forward"
-                    android:contentDescription="지난 모임" />
-
+                <ImageView android:layout_width="24dp" android:layout_height="24dp"
+                    android:src="@drawable/ic_arrow_forward" android:importantForAccessibility="no" />
             </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#E5E5EA" />
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E5EA" />
 
             <LinearLayout
                 android:id="@+id/menuNotificationSettings"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:minHeight="70dp"
-                android:paddingVertical="12dp">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginEnd="12dp"
-                    android:src="@drawable/ic_notifications"
-                    android:contentDescription="알림 설정" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="알림 설정"
-                        android:textColor="#222222"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="받을 알림 종류 선택"
-                        android:textColor="#777777"
-                        android:textSize="12sp" />
-
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:minHeight="70dp" android:paddingVertical="12dp"
+                
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+                <ImageView android:layout_width="24dp" android:layout_height="24dp"
+                    android:layout_marginEnd="12dp" android:src="@drawable/ic_notifications"
+                    android:importantForAccessibility="no" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:text="알림 설정" android:textColor="#222222"
+                        android:textSize="14sp" android:textStyle="bold" />
+                    <TextView 
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp" android:text="푸시알림 · 받을 알림 종류 선택"
+                        android:textColor="#777777" android:textSize="12sp" />
                 </LinearLayout>
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_arrow_forward"
-                    android:contentDescription="알림 설정" />
-
+                <ImageView android:layout_width="24dp" android:layout_height="24dp"
+                    android:src="@drawable/ic_arrow_forward" android:importantForAccessibility="no" />
             </LinearLayout>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E5EA" />
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#E5E5EA" />
+            <LinearLayout
+                android:id="@+id/menuLocationPermission"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:minHeight="70dp" android:paddingVertical="12dp"
+                
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+                <ImageView android:layout_width="24dp" android:layout_height="24dp"
+                    android:layout_marginEnd="12dp" android:src="@drawable/ic_location_permission"
+                    android:importantForAccessibility="no" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:text="위치 권한" android:textColor="#222222"
+                        android:textSize="14sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/tvLocationPermission"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp" android:text="확인 중"
+                        android:textColor="#777777" android:textSize="12sp" />
+                </LinearLayout>
+                <ImageView android:layout_width="24dp" android:layout_height="24dp"
+                    android:src="@drawable/ic_arrow_forward" android:importantForAccessibility="no" />
+            </LinearLayout>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E5EA" />
 
-            <Button
-                android:id="@+id/buttonLogout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:backgroundTint="#EEEEEE"
-                android:text="로그아웃"
-                android:textColor="#222222"
-                android:textSize="14sp" />
+            <LinearLayout
+                android:id="@+id/menuTerms"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:minHeight="70dp" android:paddingVertical="12dp"
+                
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+                <ImageView android:layout_width="24dp" android:layout_height="24dp"
+                    android:layout_marginEnd="12dp" android:src="@drawable/ic_document"
+                    android:importantForAccessibility="no" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:text="이용약관" android:textColor="#222222"
+                        android:textSize="14sp" android:textStyle="bold" />
+                </LinearLayout>
+                <ImageView android:layout_width="24dp" android:layout_height="24dp"
+                    android:src="@drawable/ic_arrow_forward" android:importantForAccessibility="no" />
+            </LinearLayout>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E5EA" />
 
+            <LinearLayout
+                android:id="@+id/menuPrivacy"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:minHeight="70dp" android:paddingVertical="12dp"
+                
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+                <ImageView android:layout_width="24dp" android:layout_height="24dp"
+                    android:layout_marginEnd="12dp" android:src="@drawable/ic_privacy"
+                    android:importantForAccessibility="no" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:text="개인정보 처리방침" android:textColor="#222222"
+                        android:textSize="14sp" android:textStyle="bold" />
+                </LinearLayout>
+                <ImageView android:layout_width="24dp" android:layout_height="24dp"
+                    android:src="@drawable/ic_arrow_forward" android:importantForAccessibility="no" />
+            </LinearLayout>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E5EA" />
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="70dp"
+                android:gravity="center_vertical" android:orientation="horizontal">
+                <ImageView android:layout_width="24dp" android:layout_height="24dp"
+                    android:layout_marginEnd="12dp" android:src="@drawable/ic_app_info"
+                    android:importantForAccessibility="no" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                    android:text="버전" android:textStyle="bold" android:textSize="14sp" android:textColor="#222222" />
+                <TextView android:id="@+id/tvVersion" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:textSize="13sp" android:textColor="#777777" />
+            </LinearLayout>
+            <Button android:id="@+id/buttonLogout" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginTop="20dp"
+                android:backgroundTint="#EEEEEE" android:text="로그아웃"
+                android:textColor="#222222" android:textSize="14sp" />
         </LinearLayout>
-
-    </androidx.core.widget.NestedScrollView>
-
+    </ScrollView>
 </FrameLayout>

@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@color/white" android:fillViewport="true">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingLeft="24dp"
+            android:paddingRight="24dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="20dp">
+
+            <!-- 제목 -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:text="프로필 수정"
+                android:textColor="#222222"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="사진과 이름, 닉네임, 소개를 수정할 수 있어요."
+                android:textColor="#888888"
+                android:textSize="12sp" />
+
+            <!-- 프로필 사진 -->
+            <ImageView
+                android:id="@+id/imageProfile"
+                android:layout_width="110dp"
+                android:layout_height="110dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/bg_input"
+                android:clipToOutline="true"
+                android:src="@android:drawable/ic_menu_camera"
+                android:scaleType="centerCrop"
+                android:contentDescription="프로필 사진" />
+
+            <!-- 사진 선택 -->
+            <Button
+                android:id="@+id/buttonSelectImage"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_button_site"
+                android:backgroundTint="@null"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:text="프로필 사진 선택"
+                android:textSize="12sp" />
+
+            <!-- 이름 -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="이름"
+                android:textColor="#222222"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/editProfileName"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_input"
+                android:hint="이름을 입력해주세요."
+                android:inputType="textPersonName"
+                android:maxLines="1"
+                android:padding="12dp"
+                android:textColor="#222222"
+                android:textColorHint="#BBBBBB"
+                android:textSize="13sp" />
+
+            <!-- 닉네임 -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:text="닉네임"
+                android:textColor="#222222"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/editProfileNickname"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_input"
+                android:hint="닉네임을 입력해주세요."
+                android:inputType="text"
+                android:maxLines="1"
+                android:padding="12dp"
+                android:textColor="#222222"
+                android:textColorHint="#BBBBBB"
+                android:textSize="13sp" />
+
+            <!-- 한 줄 소개 -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:text="한 줄 소개"
+                android:textColor="#222222"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/editProfileBio"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_input"
+                android:hint="나를 간단하게 소개해주세요."
+                android:inputType="text"
+                android:maxLines="1"
+                android:maxLength="100"
+                android:padding="12dp"
+                android:textColor="#222222"
+                android:textColorHint="#BBBBBB"
+                android:textSize="13sp" />
+
+            <!-- 프로필 등록 완료 -->
+            <Button
+                android:id="@+id/buttonSaveProfile"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/bg_login_button"
+                android:backgroundTint="@null"
+                android:text="저장"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+</ScrollView>

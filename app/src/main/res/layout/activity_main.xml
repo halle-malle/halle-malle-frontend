@@ -22,15 +22,6 @@
 
 
         <ImageButton
-            android:id="@+id/btnSettings"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_gravity="end"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_settings"
-            android:contentDescription="알림"
-            android:padding="12dp" />
-        <ImageButton
             android:id="@+id/btnNotification"
             android:layout_width="48dp"
             android:layout_height="48dp"
