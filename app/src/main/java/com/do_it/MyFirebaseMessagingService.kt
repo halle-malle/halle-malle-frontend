@@ -29,6 +29,12 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             return
         }
 
+        if (data["type"] == "group_cancellation" &&
+            GroupDetailActivity.isViewing(data["groupId"], data["recipientUid"])
+        ) {
+            return
+        }
+
         val title = message.notification?.title ?: "할래말래?"
         val body = message.notification?.body ?: ""
 

@@ -10,7 +10,6 @@ import android.view.View
 import android.widget.EditText
 import android.widget.Toast
 import com.google.firebase.functions.FirebaseFunctions
-import com.google.firebase.firestore.Source
 import com.do_it.MyApplication.Companion.auth
 import com.do_it.MyApplication.Companion.db
 import com.google.firebase.firestore.CollectionReference
@@ -28,8 +27,35 @@ import com.do_it.databinding.ActivityMainBinding
 import com.do_it.databinding.FragmentMypageBinding
 
 class GroupDetailActivity : AppCompatActivity() {
+    companion object {
+        @Volatile
+        private var visibleDetail: GroupDetailActivity? = null
+
+        fun isViewing(groupId: String?, uid: String?): Boolean {
+            val detail = visibleDetail ?: return false
+            return groupId != null && uid != null &&
+                detail.intent.getStringExtra("groupId") == groupId &&
+                auth.currentUser?.uid == uid
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (::adapter.isInitialized) visibleDetail = this
+    }
+
+    override fun onPause() {
+        if (visibleDetail === this) visibleDetail = null
+        super.onPause()
+    }
 
     private lateinit var adapter: detailMemberAdapter
+    private lateinit var binding: ActivityGroupDetailBinding
+    private var myCancellationApproval: Boolean? = null
+    private var cancellationRequestPending = false
+    private var cancellationCount = 0L
+    private var cancellationRequired = 0L
+    private var ballotRequestVersion = 0
     private val memberList = mutableListOf<memberData>()   // 함께하는 멤버 목록
     private var hostId = ""   // 방장 uid (모임 정보를 불러온 뒤 저장)
 
@@ -44,6 +70,7 @@ class GroupDetailActivity : AppCompatActivity() {
         super.onStart()
         val uid = auth.currentUser?.uid ?: return
         if (!::adapter.isInitialized) return
+        intent.getStringExtra("groupId")?.let { listenForCancellation(it, uid) }
 
         db.collection("users").document(uid).collection("friends")
             .whereEqualTo("status", 1)
@@ -208,41 +235,97 @@ class GroupDetailActivity : AppCompatActivity() {
     }
 
 
-    private fun submitCancellationVote(
-        binding: ActivityGroupDetailBinding, groupId: String, round: Long, approve: Boolean
-    ) {
-        binding.btnCancelVote.isEnabled = false
+    private fun listenForCancellation(groupId: String, uid: String) {
+        db.collection("groups").document(groupId).addSnapshotListener(this) { group, _ ->
+            val item = group?.toObject(GroupData::class.java) ?: return@addSnapshotListener
+            if (auth.currentUser?.uid != uid) return@addSnapshotListener
+            if (item.status == GroupData.STATUS_CANCELED) {
+                showCanceledGroup()
+                return@addSnapshotListener
+            }
+
+            val canApprove = item.dateTime > System.currentTimeMillis() &&
+                item.maxMember > 0 &&
+                (item.hostId == uid || uid in item.memberIds) &&
+                (item.status == GroupData.STATUS_RECRUITING || item.status == GroupData.STATUS_CONFIRMED)
+            binding.btnCancelVote.visibility = if (canApprove) View.VISIBLE else View.GONE
+            val version = ++ballotRequestVersion
+            if (!canApprove) return@addSnapshotListener
+
+            cancellationCount = group.getLong("cancelApprovalCount") ?: 0L
+            cancellationRequired = if (item.maxMember == 2) 1L else item.maxMember / 2L + 1L
+            updateCancellationButton()
+
+            val round = group.getLong("cancelVoteRound") ?: 0L
+            val rounds = group.reference.collection("cancelVotes")
+            val votes = if (round == 0L) rounds else rounds.document(round.toString()).collection("ballots")
+            votes.document(uid).get().addOnSuccessListener(this) { ballot ->
+                if (version != ballotRequestVersion || auth.currentUser?.uid != uid) {
+                    return@addOnSuccessListener
+                }
+                myCancellationApproval = ballot.getBoolean("approve") == true
+                updateCancellationButton()
+            }
+        }
+    }
+
+    private fun updateCancellationButton() {
+        val label = if (myCancellationApproval == true) "찬성 철회" else "모임 취소"
+        binding.btnCancelVote.text = if (cancellationCount == 0L) label
+        else "$label $cancellationCount/$cancellationRequired"
+        binding.btnCancelVote.isEnabled = myCancellationApproval != null && !cancellationRequestPending
+    }
+
+    private fun changeCancellationApproval(groupId: String) {
+        val withdraw = myCancellationApproval ?: return
+        cancellationRequestPending = true
+        updateCancellationButton()
         FirebaseFunctions.getInstance("asia-northeast3")
             .getHttpsCallable("castGroupCancellationVote")
-            .call(mapOf("groupId" to groupId, "round" to round, "approve" to approve))
-            .addOnCompleteListener(this) { vote ->
-                binding.btnCancelVote.isEnabled = true
-                if (!vote.isSuccessful) {
-                    Toast.makeText(this, vote.exception?.message ?: "투표하지 못했어요.", Toast.LENGTH_SHORT).show()
+            .call(mapOf("groupId" to groupId, "withdraw" to withdraw))
+            .addOnCompleteListener { task ->
+                if (isFinishing || isDestroyed) return@addOnCompleteListener
+                cancellationRequestPending = false
+                updateCancellationButton()
+                if (!task.isSuccessful) {
+                    Toast.makeText(this, task.exception?.message ?: "취소 요청을 보내지 못했어요.", Toast.LENGTH_SHORT).show()
                     return@addOnCompleteListener
                 }
-                val result = vote.result.data as? Map<*, *>
+
+                val result = task.result.data as? Map<*, *>
+                ++ballotRequestVersion
+                myCancellationApproval = result?.get("approved") == true
+                cancellationCount = (result?.get("yes") as? Number)?.toLong() ?: cancellationCount
+                cancellationRequired = (result?.get("required") as? Number)?.toLong() ?: cancellationRequired
+                updateCancellationButton()
                 val message = when {
                     result?.get("canceled") == true -> {
-                        binding.tvMeetupState.text = "모임 취소"
-                        binding.tvMeetupState.setBackgroundResource(R.drawable.bg_badge_past)
-                        binding.btnCancelVote.visibility = View.GONE
-                        binding.btnDeleteGroup.visibility = View.GONE
-                        binding.btnGroupChat.visibility = View.GONE
+                        showCanceledGroup()
                         "모임이 취소되었습니다."
                     }
-                    result?.get("rejected") == true -> "취소 투표가 부결됐어요. 다시 투표할 수 있어요."
-                    else -> "투표 완료 · 찬성 ${result?.get("yes")}표 / 필요 ${result?.get("required")}표"
+                    withdraw -> "모임 취소 찬성을 철회했어요."
+                    result?.get("alreadyApproved") == true -> "이미 모임 취소에 찬성했어요."
+                    else -> "모임 취소에 찬성했어요."
                 }
                 Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
             }
+    }
+
+    private fun showCanceledGroup() {
+        binding.tvMeetupState.text = "모임 취소"
+        binding.tvMeetupState.setBackgroundResource(R.drawable.bg_badge_past)
+        binding.btnCancelVote.visibility = View.GONE
+        binding.btnDeleteGroup.visibility = View.GONE
+        binding.btnGroupChat.visibility = View.GONE
+        binding.btnConfirmGroup.visibility = View.GONE
+        binding.btnEditGroup.visibility = View.GONE
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val binding = ActivityGroupDetailBinding.inflate(layoutInflater)
+        binding = ActivityGroupDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
         NotificationHistoryActivity.bind(this, binding.btnNotification)
 
@@ -252,6 +335,8 @@ class GroupDetailActivity : AppCompatActivity() {
             finish()
             return
         }
+
+        binding.btnCancelVote.setOnClickListener { changeCancellationApproval(groupId) }
 
         binding.bckBtnFrmGroupDetail.setOnClickListener{
             finish()
@@ -328,33 +413,6 @@ class GroupDetailActivity : AppCompatActivity() {
 
             // 방장 / 참여자 버튼
             val uid = auth.currentUser?.uid
-            if (!started && uid != null &&
-                (item.hostId == uid || uid in item.memberIds) &&
-                item.status in listOf(GroupData.STATUS_RECRUITING, GroupData.STATUS_CONFIRMED)
-            ) {
-                binding.btnCancelVote.visibility = View.VISIBLE
-                binding.btnCancelVote.setOnClickListener {
-                    db.collection("groups").document(groupId).get(Source.SERVER)
-                        .addOnSuccessListener(this) { group ->
-                            if (!group.exists() || group.getLong("status") == GroupData.STATUS_CANCELED.toLong()) {
-                                binding.btnCancelVote.visibility = View.GONE
-                                return@addOnSuccessListener
-                            }
-                            val round = group.getLong("cancelVoteRound") ?: 0L
-                            AlertDialog.Builder(this)
-                                .setTitle("모임 취소 투표")
-                                .setMessage("2명 모임은 찬성 1표, 그 외에는 방장 포함 참가자 과반이 필요해요. 회차마다 한 번 투표할 수 있어요.")
-                                .setPositiveButton("찬성") { _, _ -> submitCancellationVote(binding, groupId, round, true) }
-                                .setNegativeButton("반대") { _, _ -> submitCancellationVote(binding, groupId, round, false) }
-                                .setNeutralButton("닫기", null)
-                                .show()
-                        }
-                        .addOnFailureListener(this) {
-                            Toast.makeText(this, "투표 상태를 불러오지 못했어요.", Toast.LENGTH_SHORT).show()
-                        }
-                }
-            }
-
             if (item.status == GroupData.STATUS_CANCELED) {
                 binding.btnDeleteGroup.visibility = View.GONE
             } else if (started && !past && item.hostId == uid) {

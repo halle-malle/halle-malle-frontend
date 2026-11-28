@@ -12,6 +12,8 @@ const {getMessaging} = require("firebase-admin/messaging");
 initializeApp();
 setGlobalOptions({maxInstances: 10});
 
+const chatNotificationTypes = ["group_chat", "personal_chat"];
+
 exports.notifyFriendRequest = onDocumentCreated(
     "users/{receiverUid}/friends/{senderUid}",
     async (event) => {
@@ -176,19 +178,24 @@ async function sendGroupMemberNotification(
     uid, title, body, type, groupId, eventId,
 ) {
   const db = getFirestore();
-  const id = createHash("sha256").update(type + ":" + eventId).digest("hex");
-  const inbox = db.collection("notificationInboxes").doc(uid);
-  const item = inbox.collection("items").doc(id);
-  try {
+  const isChat = chatNotificationTypes.includes(type);
+  const data = {type, groupId, recipientUid: uid};
+  if (!isChat) {
+    const id = createHash("sha256").update(type + ":" + eventId).digest("hex");
+    const inbox = db.collection("notificationInboxes").doc(uid);
+    const item = inbox.collection("items").doc(id);
     const batch = db.batch();
     batch.create(item, {
       title, body, type, groupId, createdAt: FieldValue.serverTimestamp(),
     });
     batch.set(inbox, {changedAt: FieldValue.serverTimestamp()}, {merge: true});
-    await batch.commit();
-  } catch (error) {
-    if (error.code === 6) return; // Duplicate delivery of the same event.
-    throw error;
+    try {
+      await batch.commit();
+    } catch (error) {
+      if (error.code === 6) return; // Duplicate delivery of the same event.
+      throw error;
+    }
+    data.notificationId = id;
   }
 
   const user = await db.collection("users").doc(uid).get();
@@ -200,7 +207,7 @@ async function sendGroupMemberNotification(
   const message = {
     token,
     notification: {title, body},
-    data: {type, groupId, recipientUid: uid, notificationId: id},
+    data,
   };
   if (type === "group_chat") {
     message.android = {
@@ -224,8 +231,17 @@ exports.listNotifications = onCall({region: "asia-northeast3"}, async (req) => {
     if (!last.exists) return {items: [], nextCursor: null};
     query = query.startAfter(last);
   }
-  const page = await query.limit(51).get();
-  const docs = page.docs.slice(0, 50);
+  const visible = [];
+  let page = await query.limit(100).get();
+  while (!page.empty && visible.length < 51) {
+    for (const doc of page.docs) {
+      if (!chatNotificationTypes.includes(doc.get("type"))) visible.push(doc);
+      if (visible.length === 51) break;
+    }
+    if (page.size < 100 || visible.length === 51) break;
+    page = await query.startAfter(page.docs[page.size - 1]).limit(100).get();
+  }
+  const docs = visible.slice(0, 50);
   return {
     items: docs.map((doc) => {
       const {title, body, type, groupId, createdAt} = doc.data();
@@ -234,7 +250,7 @@ exports.listNotifications = onCall({region: "asia-northeast3"}, async (req) => {
         read: doc.get("read") === true,
       };
     }),
-    nextCursor: page.size > 50 ? docs[49].id : null,
+    nextCursor: visible.length > 50 ? docs[49].id : null,
   };
 });
 
@@ -246,11 +262,16 @@ exports.getNotificationUnreadCount = onCall(
       }
       const items = getFirestore().collection("notificationInboxes")
           .doc(req.auth.uid).collection("items");
-      const [total, read] = await Promise.all([
+      const [total, read, legacyChat] = await Promise.all([
         items.count().get(),
         items.where("read", "==", true).count().get(),
+        items.where("type", "in", chatNotificationTypes).select("read").get(),
       ]);
-      return {unread: Math.max(0, total.data().count - read.data().count)};
+      const unreadChat = legacyChat.docs.filter((doc) =>
+        doc.get("read") !== true,
+      ).length;
+      return {unread: Math.max(0,
+          total.data().count - read.data().count - unreadChat)};
     },
 );
 
@@ -309,11 +330,14 @@ exports.castGroupCancellationVote = onCall(
       if (!req.auth) {
         throw new HttpsError("unauthenticated", "로그인이 필요해요.");
       }
-      const {groupId, approve, round} = req.data || {};
+      const {groupId, withdraw = false} = req.data || {};
       if (typeof groupId !== "string" || !groupId || groupId.includes("/") ||
-          groupId === "." || groupId === ".." || typeof approve !== "boolean" ||
-          !Number.isSafeInteger(round) || round < 0) {
-        throw new HttpsError("invalid-argument", "잘못된 투표 요청이에요.");
+          groupId === "." || groupId === ".." ||
+          typeof withdraw !== "boolean" ||
+          Object.keys(req.data).some((key) =>
+            key !== "groupId" && key !== "withdraw",
+          )) {
+        throw new HttpsError("invalid-argument", "최신 앱에서 다시 시도해주세요.");
       }
       const uid = req.auth.uid;
       const db = getFirestore();
@@ -335,57 +359,54 @@ exports.castGroupCancellationVote = onCall(
           throw new HttpsError("failed-precondition", "투표가 종료된 모임이에요.");
         }
 
-        const activeRound = group.get("cancelVoteRound") || 0;
-        if (round !== activeRound) {
-          throw new HttpsError("aborted", "투표 회차가 바뀌었어요. 다시 선택해주세요.");
+        const capacity = group.get("maxMember");
+        if (!Number.isSafeInteger(capacity) || capacity < 1) {
+          throw new HttpsError("failed-precondition", "모임 정원을 확인해주세요.");
         }
+        const required = capacity === 2 ? 1 : Math.floor(capacity / 2) + 1;
+        const round = group.get("cancelVoteRound") || 0;
         const rounds = groupRef.collection("cancelVotes");
-        // Round zero retains votes already recorded by earlier app builds.
         const votes = round === 0 ? rounds :
           rounds.doc(String(round)).collection("ballots");
         const snapshot = await transaction.get(votes);
-        const ballots = snapshot.docs.filter((doc) => participants.has(doc.id));
-        const required = participants.size === 2 ? 1 :
-          Math.floor(participants.size / 2) + 1;
-        const previousYes = ballots.filter((doc) =>
-          doc.get("approve") === true,
-        ).length;
-        if (previousYes >= required) {
-          transaction.update(groupRef, {status: 2, canceledByVote: true});
-          return {yes: previousYes, required, canceled: true, rejected: false};
+        const approved = new Set(snapshot.docs.filter((doc) =>
+          participants.has(doc.id) && doc.get("approve") === true,
+        ).map((doc) => doc.id));
+        const alreadyApproved = approved.has(uid);
+        if (withdraw) {
+          if (alreadyApproved) transaction.delete(votes.doc(uid));
+          approved.delete(uid);
+        } else {
+          if (!alreadyApproved) {
+            transaction.set(votes.doc(uid), {approve: true});
+          }
+          approved.add(uid);
         }
-        const previousNo = ballots.length - previousYes;
-        if (participants.size - previousNo < required) {
-          transaction.update(groupRef, {cancelVoteRound: round + 1});
-          return {canceled: false, rejected: true};
-        }
-        if (ballots.some((doc) => doc.id === uid)) {
-          throw new HttpsError("already-exists", "이 회차에 이미 투표했어요.");
-        }
-        const yes = previousYes + (approve ? 1 : 0);
-        const no = previousNo + (approve ? 0 : 1);
+
+        const yes = approved.size;
         const canceled = yes >= required;
-        const rejected = participants.size - no < required;
-        transaction.create(votes.doc(uid), {approve});
-        const update = {cancelVoteUpdatedAt: FieldValue.serverTimestamp()};
+        const update = {
+          cancelApprovalCount: yes,
+          cancelVoteUpdatedAt: FieldValue.serverTimestamp(),
+        };
         if (canceled) {
           update.status = 2;
           update.canceledByVote = true;
-        } else if (rejected) {
-          update.cancelVoteRound = round + 1;
         }
         transaction.update(groupRef, update);
-        return {yes, required, canceled, rejected};
+        return {
+          yes, required, canceled, approved: !withdraw, alreadyApproved,
+        };
       });
     },
 );
 
 exports.notifyGroupStart = onSchedule("every 1 minutes", async () => {
   const db = getFirestore();
-  const now = Date.now();
+  const oneHourAhead = Date.now() + 60 * 60 * 1000;
   const groups = await db.collection("groups")
-      .where("dateTime", ">", now - 2 * 60 * 1000)
-      .where("dateTime", "<=", now)
+      .where("dateTime", ">", oneHourAhead - 2 * 60 * 1000)
+      .where("dateTime", "<=", oneHourAhead)
       .get();
 
   for (const group of groups.docs) {
@@ -395,22 +416,22 @@ exports.notifyGroupStart = onSchedule("every 1 minutes", async () => {
       const status = current.get("status");
       if (current.get("dateTime") !== dateTime ||
           (status !== 0 && status !== 1) ||
-          current.get("startNotificationFor") === dateTime) {
+          current.get("oneHourReminderFor") === dateTime) {
         return [];
       }
 
       const memberIds = current.get("memberIds") || [];
       const hostId = current.get("hostId");
-      // Reserve this start time before sending so overlapping runs skip it.
-      transaction.update(group.ref, {startNotificationFor: dateTime});
+      // Reserve the reminder before sending so overlapping runs skip it.
+      transaction.update(group.ref, {oneHourReminderFor: dateTime});
       return [...new Set([hostId, ...memberIds])].filter((uid) => uid);
     });
 
     await Promise.all(recipients.map(async (uid) => {
       try {
         await sendGroupMemberNotification(
-            uid, "모임 시작", "모임 시작 시간이 되었어요.",
-            "group_start", group.id, `start:${group.id}:${dateTime}`,
+            uid, "모임 시작 1시간 전", "모임이 약 1시간 뒤에 시작돼요.",
+            "group_start", group.id, `one-hour:${group.id}:${dateTime}`,
         );
       } catch (error) {
         logger.error("Group start notification failed", {

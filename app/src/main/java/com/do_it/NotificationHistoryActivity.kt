@@ -13,12 +13,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
-import com.google.android.material.badge.BadgeDrawable
-import com.google.android.material.badge.BadgeUtils
-import com.google.android.material.badge.ExperimentalBadgeUtils
 import com.do_it.MyApplication.Companion.auth
 import com.do_it.databinding.ActivityNotificationHistoryBinding
 import com.do_it.databinding.NotificationHistoryItemBinding
@@ -32,55 +26,6 @@ class NotificationHistoryActivity : AppCompatActivity() {
             button.setOnClickListener {
                 activity.startActivity(Intent(activity, NotificationHistoryActivity::class.java))
             }
-            attachUnreadBadge(activity, button)
-        }
-
-        @androidx.annotation.OptIn(ExperimentalBadgeUtils::class)
-        private fun attachUnreadBadge(activity: AppCompatActivity, button: View) {
-            val badge = BadgeDrawable.create(activity)
-            val inset = (8 * activity.resources.displayMetrics.density).toInt()
-            badge.horizontalOffset = inset
-            badge.verticalOffset = inset
-            badge.isVisible = false
-            button.post {
-                if (!activity.isDestroyed) BadgeUtils.attachBadgeDrawable(badge, button)
-            }
-            activity.lifecycle.addObserver(object : DefaultLifecycleObserver {
-                private var requestVersion = 0
-
-                override fun onStart(owner: LifecycleOwner) {
-                    val uid = auth.currentUser?.uid ?: return
-                    MyApplication.db.collection("notificationInboxes").document(uid)
-                        .addSnapshotListener(activity) { snapshot, error ->
-                            if (snapshot == null || error != null) return@addSnapshotListener
-                            val version = ++requestVersion
-                            loadUnreadCount { count ->
-                                if (version != requestVersion || count == null ||
-                                    auth.currentUser?.uid != uid ||
-                                    !owner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
-                                ) return@loadUnreadCount
-                                badge.number = count
-                                badge.isVisible = count > 0
-                                button.contentDescription =
-                                    if (count == 0) "알림" else "알림, 읽지 않은 ${count}개"
-                            }
-                        }
-                }
-
-                override fun onStop(owner: LifecycleOwner) {
-                    requestVersion++
-                }
-            })
-        }
-
-        private fun loadUnreadCount(onResult: (Int?) -> Unit) {
-            FirebaseFunctions.getInstance("asia-northeast3")
-                .getHttpsCallable("getNotificationUnreadCount")
-                .call()
-                .addOnCompleteListener { task ->
-                    val data = if (task.isSuccessful) task.result.data as? Map<*, *> else null
-                    onResult((data?.get("unread") as? Number)?.toInt())
-                }
         }
 
         fun markAsRead(id: String, onResult: (Boolean) -> Unit = {}) {
@@ -251,12 +196,6 @@ class NotificationHistoryActivity : AppCompatActivity() {
                 binding.moreButton.visibility = if (nextCursor == null) View.GONE else View.VISIBLE
                 binding.emptyMessage.text = "아직 받은 알림이 없어요."
                 binding.emptyMessage.visibility = if (adapter.isEmpty) View.VISIBLE else View.GONE
-                loadUnreadCount { count ->
-                    if (!isFinishing && !isDestroyed && auth.currentUser?.uid == uid) {
-                        binding.allReadMessage.visibility =
-                            if (!adapter.isEmpty && count == 0) View.VISIBLE else View.GONE
-                    }
-                }
             }
     }
 }
