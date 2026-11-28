@@ -42,31 +42,6 @@ class GroupDetailActivity : AppCompatActivity() {
             }
     }
 
-    // 모임 삭제 : 멤버, 채팅 문서를 지우고 모임 문서도 삭제
-    private fun deleteGroup(groupId: String) {
-        val ref = db.collection("groups").document(groupId)
-
-        ref.collection("members").get().addOnSuccessListener {
-            for (document in it) {
-                document.reference.delete()
-            }
-        }
-        ref.collection("chats").get().addOnSuccessListener {
-            for (document in it) {
-                document.reference.delete()
-            }
-        }
-
-        val task = ref.delete()
-        task.addOnSuccessListener {
-            Toast.makeText(baseContext, "모임이 삭제되었어요.", Toast.LENGTH_SHORT).show()
-            finish()
-        }
-        task.addOnFailureListener {
-            Toast.makeText(baseContext, "삭제 실패", Toast.LENGTH_SHORT).show()
-        }
-    }
-
     // 모임 탈퇴 : members에서 내 문서를 지우고, 모임의 memberIds와 memberCount 수정
     private fun leaveGroup(groupId: String, uid: String, item: GroupData) {
         val ref = db.collection("groups").document(groupId)
@@ -210,7 +185,7 @@ class GroupDetailActivity : AppCompatActivity() {
                     }
                     AlertDialog.Builder(this)
                         .setTitle("모임 취소 투표")
-                        .setMessage("방장을 포함한 전체 참가자 과반이 찬성하면 모임이 취소됩니다. 투표는 한 번만 할 수 있어요.")
+                        .setMessage("2명 모임은 찬성 1표, 그 외에는 방장 포함 참가자 과반이 필요해요. 투표는 한 번만 할 수 있어요.")
                         .setPositiveButton("찬성") { _, _ -> submitVote(true) }
                         .setNegativeButton("반대") { _, _ -> submitVote(false) }
                         .setNeutralButton("닫기", null)
@@ -272,21 +247,6 @@ class GroupDetailActivity : AppCompatActivity() {
                     }
                 }
 
-                binding.btnDeleteGroup.text = "모임 삭제"
-                binding.btnDeleteGroup.visibility = View.VISIBLE
-                // 모임 삭제 버튼 : 한 번 더 물어보고 삭제
-                binding.btnDeleteGroup.setOnClickListener {
-                    val builder = AlertDialog.Builder(this)
-                    builder.setTitle("모임 삭제")
-                    builder.setMessage("모임을 삭제할까요? 삭제하면 되돌릴 수 없어요.")
-                    builder.setPositiveButton("삭제", object: DialogInterface.OnClickListener {
-                        override fun onClick(dialog: DialogInterface?, which: Int) {
-                            deleteGroup(groupId)
-                        }
-                    })
-                    builder.setNegativeButton("취소", null)
-                    builder.show()
-                }
             } else if (!started && item.status == GroupData.STATUS_RECRUITING && uid != null && item.memberIds.contains(uid)) {
                 binding.btnDeleteGroup.text = "모임 탈퇴"
                 binding.btnDeleteGroup.visibility = View.VISIBLE

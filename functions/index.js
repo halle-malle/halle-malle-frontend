@@ -270,7 +270,8 @@ exports.castGroupCancellationVote = onCall(
         const yes = ballots.docs.filter((doc) =>
           participants.has(doc.id) && doc.get("approve") === true,
         ).length + (approve ? 1 : 0);
-        const required = Math.floor(participants.size / 2) + 1;
+        const required = participants.size === 2 ? 1 :
+          Math.floor(participants.size / 2) + 1;
         const canceled = yes >= required;
         transaction.create(votes.doc(uid), {approve});
         // Serialize votes even when the group is not yet canceled.
