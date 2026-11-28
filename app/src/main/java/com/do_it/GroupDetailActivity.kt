@@ -236,7 +236,7 @@ class GroupDetailActivity : AppCompatActivity() {
 
         val binding = ActivityGroupDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        NotificationHistory.bind(this, binding.btnNotification)
+        NotificationHistoryActivity.bind(this, binding.btnNotification)
 
         val rIntent = getIntent()
         val groupId = rIntent.getStringExtra("groupId")   // 홈에서 넘겨준 모임 id
