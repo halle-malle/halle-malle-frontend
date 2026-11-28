@@ -1,8 +1,9 @@
 package com.do_it
 
-import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -11,15 +12,33 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.do_it.MyApplication.Companion.auth
 import com.do_it.MyApplication.Companion.db
 import com.do_it.databinding.ActivityGroupChatBinding
-import com.do_it.databinding.ActivityGroupDetailBinding
+import com.google.firebase.firestore.Query
 
 class GroupChatActivity : AppCompatActivity() {
+    companion object {
+        private var visibleChat: GroupChatActivity? = null
+
+        fun isViewing(groupId: String?, uid: String?): Boolean {
+            val chat = visibleChat ?: return false
+            return groupId != null && uid != null && chat.listening &&
+                chat.roomId == groupId && chat.userId == uid
+        }
+    }
+
+    private lateinit var binding: ActivityGroupChatBinding
+    private lateinit var adapter: GroupChatAdapter
+    private lateinit var chatQuery: Query
+    private val chatList = mutableListOf<chatData>()
+    private var roomId: String? = null
+    private var userId: String? = null
+    private var listening = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
 
-        val binding = ActivityGroupChatBinding.inflate(layoutInflater)
+        binding = ActivityGroupChatBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         val gIntent = getIntent()
@@ -29,6 +48,9 @@ class GroupChatActivity : AppCompatActivity() {
             finish()
             return
         }
+
+        roomId = groupId
+        userId = myId
 
         binding.bckBtnFrmGroupChat.setOnClickListener{
             finish()
@@ -51,8 +73,7 @@ class GroupChatActivity : AppCompatActivity() {
             }
         }
 
-        val chatList = mutableListOf<chatData>()
-        val adapter = GroupChatAdapter(chatList, myId)
+        adapter = GroupChatAdapter(chatList, myId)
 
         binding.rvChat.layoutManager = LinearLayoutManager(this)
         binding.rvChat.adapter = adapter
@@ -75,22 +96,53 @@ class GroupChatActivity : AppCompatActivity() {
             }
         })
 
-        // 새 메시지가 올라올 때마다 목록 다시 보여주기 (보낸 시간 순서)
-        chatRef.orderBy("createdAt").addSnapshotListener(this) { value, error ->
-            if (value == null) return@addSnapshotListener
-
-            chatList.clear()
-            for (document in value) {
-                chatList.add(document.toObject(chatData::class.java))
-            }
-            adapter.notifyDataSetChanged()
-            binding.rvChat.scrollToPosition(chatList.size - 1)   // 맨 아래로
-        }
+        chatQuery = chatRef.orderBy("createdAt")
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (!::chatQuery.isInitialized) return
+
+        // Firestore removes this Activity-scoped listener when onStop runs.
+        chatQuery.addSnapshotListener(this) { value, error ->
+            if (error != null) {
+                listening = false
+                Log.w("GroupChat", "채팅 목록 구독 실패", error)
+                Toast.makeText(this, "채팅을 불러오지 못했어요.", Toast.LENGTH_SHORT).show()
+                return@addSnapshotListener
+            }
+            if (value == null) return@addSnapshotListener
+
+            listening = true
+            chatList.clear()
+            for (document in value) {
+                chatList.add(document.toObject(chatData::class.java))
+            }
+            adapter.notifyDataSetChanged()
+            if (chatList.isNotEmpty()) {
+                binding.rvChat.scrollToPosition(chatList.lastIndex)
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (::chatQuery.isInitialized) visibleChat = this
+    }
+
+    override fun onPause() {
+        if (visibleChat === this) visibleChat = null
+        super.onPause()
+    }
+
+    override fun onStop() {
+        listening = false
+        super.onStop()
     }
 }
