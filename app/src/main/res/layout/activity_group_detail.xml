@@ -84,7 +84,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginRight="7dp"
                 android:padding="3dp"
-                android:background="@drawable/bg_status_card_white"
+                android:background="@drawable/bg_badge_confirmed"
+                android:textColor="#FFFFFF"
                 android:text="모집 확정" />
 
         </LinearLayout>
@@ -267,6 +268,13 @@
             android:visibility="gone" />
 
         <!-- 하단 버튼 (방장: 모임 삭제 / 참여자: 모임 탈퇴, 코드에서 글자 바꿈) -->
+        <Button
+            android:id="@+id/btnCancelVote"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="모임 취소 투표"
+            android:visibility="gone" />
+
         <Button
             android:id="@+id/btnDeleteGroup"
             android:layout_width="match_parent"

@@ -105,7 +105,15 @@ class PinBottomSheetFragment : BottomSheetDialogFragment() {
 
     // 모임 정보를 화면에 보여줌
     private fun showGroup(item: GroupData) {
-        binding.tvTitle.text = item.title
+        // 카테고리 이모지 모임 이름 앞에 붙이기
+        val emoji = when (item.category) {
+            "운동" -> "🏸"
+            "스터디" -> "💻"
+            "맛집" -> "🍕"
+            "취미" -> "🎸"
+            else -> "💬"
+        }
+        binding.tvTitle.text = emoji + " " + item.title
         binding.tvMemberCount.text = "${item.memberCount}/${item.maxMember}명"
 
         // 이미 참여 중이면 버튼 글자 바꾸기
@@ -121,10 +129,12 @@ class PinBottomSheetFragment : BottomSheetDialogFragment() {
         }
 
         // 모집 상태
-        binding.tvStatus.text = when (item.status) {
-            GroupData.STATUS_RECRUITING -> "모집 중"
-            GroupData.STATUS_CONFIRMED -> "모집 확정"
-            else -> "종료"
+        if (item.status == GroupData.STATUS_CONFIRMED) {
+            binding.tvStatus.text = "모집 확정"
+            binding.tvStatus.setBackgroundResource(R.drawable.bg_badge_confirmed)
+        } else {
+            binding.tvStatus.text = "모집 중"
+            binding.tvStatus.setBackgroundResource(R.drawable.bg_badge_recruiting)
         }
 
         // 일시

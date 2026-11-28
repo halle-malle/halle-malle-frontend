@@ -47,7 +47,7 @@
             android:layout_gravity="right"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="알림"
-            android:src="@drawable/ic_menu" />
+            android:src="@drawable/ic_notifications" />
 
 
     </androidx.appcompat.widget.Toolbar>

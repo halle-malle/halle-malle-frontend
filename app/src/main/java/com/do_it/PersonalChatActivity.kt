@@ -19,6 +19,7 @@ class PersonalChatActivity : AppCompatActivity() {
 
         val binding = ActivityPersonalChatBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        NotificationHistory.bind(this, binding.btnNotification)
 
         val pIntent = getIntent()
         val friendId = pIntent.getStringExtra("friendId")   // 넘겨받은 친구 uid

@@ -1,0 +1,62 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isHost() {
+      return resource.data.hostId == request.auth.uid;
+    }
+
+    function changesOnlyOwnMembership() {
+      let fields = request.resource.data.diff(resource.data).affectedKeys();
+      let before = resource.data.memberIds.toSet();
+      let after = request.resource.data.memberIds.toSet();
+      let added = after.difference(before);
+      let removed = before.difference(after);
+      return fields.hasOnly(['memberIds', 'memberCount', 'status'])
+        && request.resource.data.memberIds.size() == after.size()
+        && request.resource.data.memberCount == after.size()
+        && ((added == [request.auth.uid].toSet() && removed.size() == 0
+              && resource.data.status == 0
+              && after.size() <= resource.data.maxMember
+              && (request.resource.data.status == 0
+                  || (request.resource.data.status == 1
+                      && after.size() == resource.data.maxMember)))
+            || (removed == [request.auth.uid].toSet() && added.size() == 0
+                && resource.data.status == 0
+                && request.resource.data.status == 0));
+    }
+
+    // Keep the existing access policy for unrelated app collections.
+    match /{collection}/{document=**} {
+      allow read, write: if signedIn()
+        && collection != 'groups'
+        && collection != 'notificationInboxes';
+    }
+
+    // Notification history and ballots are accessed through authenticated Functions.
+    match /groups/{groupId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.hostId == request.auth.uid
+        && request.resource.data.memberIds == [request.auth.uid]
+        && request.resource.data.status == 0
+        && !request.resource.data.keys().hasAny(['canceledByVote', 'cancelVoteUpdatedAt']);
+      allow delete: if signedIn() && isHost();
+      allow update: if signedIn()
+        && !request.resource.data.diff(resource.data).affectedKeys()
+             .hasAny(['hostId', 'canceledByVote', 'cancelVoteUpdatedAt'])
+        && resource.data.status != 2
+        && request.resource.data.status != 2
+        && (changesOnlyOwnMembership()
+            || (isHost() && request.resource.data.memberIds == resource.data.memberIds));
+    }
+
+    match /groups/{groupId}/{subcollection}/{document=**} {
+      allow read, write: if signedIn() && subcollection != 'cancelVotes';
+    }
+  }
+}

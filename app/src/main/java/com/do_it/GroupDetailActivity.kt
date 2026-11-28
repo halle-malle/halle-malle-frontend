@@ -7,6 +7,8 @@ import androidx.appcompat.app.AlertDialog
 import android.text.format.DateFormat
 import android.view.View
 import android.widget.Toast
+import com.google.firebase.functions.FirebaseFunctions
+import com.google.firebase.functions.FirebaseFunctionsException
 import com.do_it.MyApplication.Companion.auth
 import com.do_it.MyApplication.Companion.db
 import androidx.activity.enableEdgeToEdge
@@ -25,6 +27,20 @@ class GroupDetailActivity : AppCompatActivity() {
 
     private lateinit var adapter: detailMemberAdapter
     private val memberList = mutableListOf<memberData>()   // 함께하는 멤버 목록
+
+    override fun onStart() {
+        super.onStart()
+        val uid = auth.currentUser?.uid ?: return
+        if (!::adapter.isInitialized) return
+
+        db.collection("users").document(uid).collection("friends")
+            .whereEqualTo("status", 1)
+            .addSnapshotListener(this) { snapshot, _ ->
+                if (snapshot != null && auth.currentUser?.uid == uid) {
+                    adapter.updateFriends(snapshot.documents.map { it.id }.toSet())
+                }
+            }
+    }
 
     // 모임 삭제 : 멤버, 채팅 문서를 지우고 모임 문서도 삭제
     private fun deleteGroup(groupId: String) {
@@ -77,6 +93,7 @@ class GroupDetailActivity : AppCompatActivity() {
 
         val binding = ActivityGroupDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        NotificationHistory.bind(this, binding.btnNotification)
 
         val rIntent = getIntent()
         val groupId = rIntent.getStringExtra("groupId")   // 홈에서 넘겨준 모임 id
@@ -120,19 +137,34 @@ class GroupDetailActivity : AppCompatActivity() {
             val item = it.toObject(GroupData::class.java)
             if (item == null) return@addOnSuccessListener
 
-            binding.tvGroupName.text = item.title
+            // 카테고리 이모지 모임 이름 앞에 붙이기
+            val emoji = when (item.category) {
+                "운동" -> "🏸"
+                "스터디" -> "💻"
+                "맛집" -> "🍕"
+                "취미" -> "🎸"
+                else -> "💬"
+            }
+            binding.tvGroupName.text = emoji + " " + item.title
             binding.tvCategory.text = if (item.category.isEmpty()) "기타" else item.category
             // 모집 상태
             val started = item.dateTime < System.currentTimeMillis()
             val past = item.status == GroupData.STATUS_FINISHED || item.dateTime + GroupData.END_TIME < System.currentTimeMillis()
-            if (past) {
+            if (item.status == GroupData.STATUS_CANCELED) {
+                binding.tvMeetupState.text = "모임 취소"
+                binding.btnGroupChat.visibility = View.GONE
+            } else if (past) {
                 binding.tvMeetupState.text = "지난 모임"
+                binding.tvMeetupState.setBackgroundResource(R.drawable.bg_badge_past)
             } else if (started) {
                 binding.tvMeetupState.text = "모임 중"
+                binding.tvMeetupState.setBackgroundResource(R.drawable.bg_badge_ongoing)
             } else if (item.status == GroupData.STATUS_CONFIRMED) {
                 binding.tvMeetupState.text = "모집 확정"
+                binding.tvMeetupState.setBackgroundResource(R.drawable.bg_badge_confirmed)
             } else {
                 binding.tvMeetupState.text = "모집 중"
+                binding.tvMeetupState.setBackgroundResource(R.drawable.bg_badge_recruiting)
             }
             binding.tvDate.text = if (item.dateTime == 0L) "일시 미정" else DateFormat.format("yyyy.MM.dd EEEE HH:mm", item.dateTime)
             binding.tvPlace.text = if (item.place.isEmpty()) "동양미래대학교 인근" else item.place
@@ -141,7 +173,54 @@ class GroupDetailActivity : AppCompatActivity() {
 
             // 방장 / 참여자 버튼
             val uid = auth.currentUser?.uid
-            if (started && !past && item.hostId == uid) {
+            if (!started && uid != null &&
+                (item.hostId == uid || uid in item.memberIds) &&
+                item.status in listOf(GroupData.STATUS_RECRUITING, GroupData.STATUS_CONFIRMED)
+            ) {
+                binding.btnCancelVote.visibility = View.VISIBLE
+                binding.btnCancelVote.setOnClickListener {
+                    val submitVote: (Boolean) -> Unit = { approve ->
+                        binding.btnCancelVote.isEnabled = false
+                        FirebaseFunctions.getInstance("asia-northeast3")
+                            .getHttpsCallable("castGroupCancellationVote")
+                            .call(mapOf("groupId" to groupId, "approve" to approve))
+                            .addOnCompleteListener(this) { vote ->
+                                if (vote.isSuccessful) {
+                                    val result = vote.result.data as? Map<*, *>
+                                    binding.btnCancelVote.visibility = View.GONE
+                                    if (result?.get("canceled") == true) {
+                                        binding.tvMeetupState.text = "모임 취소"
+                                        binding.btnDeleteGroup.visibility = View.GONE
+                                        binding.btnGroupChat.visibility = View.GONE
+                                        Toast.makeText(this, "모임이 취소되었습니다.", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        val yes = result?.get("yes")
+                                        val required = result?.get("required")
+                                        Toast.makeText(this, "투표 완료 · 찬성 ${yes}표 / 필요 ${required}표", Toast.LENGTH_SHORT).show()
+                                    }
+                                } else {
+                                    val error = vote.exception as? FirebaseFunctionsException
+                                    binding.btnCancelVote.isEnabled = true
+                                    if (error?.code == FirebaseFunctionsException.Code.ALREADY_EXISTS) {
+                                        binding.btnCancelVote.visibility = View.GONE
+                                    }
+                                    Toast.makeText(this, error?.message ?: "투표하지 못했어요.", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                    }
+                    AlertDialog.Builder(this)
+                        .setTitle("모임 취소 투표")
+                        .setMessage("방장을 포함한 전체 참가자 과반이 찬성하면 모임이 취소됩니다. 투표는 한 번만 할 수 있어요.")
+                        .setPositiveButton("찬성") { _, _ -> submitVote(true) }
+                        .setNegativeButton("반대") { _, _ -> submitVote(false) }
+                        .setNeutralButton("닫기", null)
+                        .show()
+                }
+            }
+
+            if (item.status == GroupData.STATUS_CANCELED) {
+                binding.btnDeleteGroup.visibility = View.GONE
+            } else if (started && !past && item.hostId == uid) {
                 binding.btnDeleteGroup.text = "모임 종료"
                 binding.btnDeleteGroup.visibility = View.VISIBLE
                 // 모임 종료 버튼
@@ -155,6 +234,7 @@ class GroupDetailActivity : AppCompatActivity() {
                             finishTask.addOnSuccessListener {
                                 Toast.makeText(baseContext, "모임이 종료되었어요.", Toast.LENGTH_SHORT).show()
                                 binding.tvMeetupState.text = "지난 모임"
+                                binding.tvMeetupState.setBackgroundResource(R.drawable.bg_badge_past)
                                 binding.btnDeleteGroup.visibility = View.GONE
                             }
                             finishTask.addOnFailureListener {
@@ -179,6 +259,7 @@ class GroupDetailActivity : AppCompatActivity() {
                                 confirmTask.addOnSuccessListener {
                                     Toast.makeText(baseContext, "모임이 확정되었어요.", Toast.LENGTH_SHORT).show()
                                     binding.tvMeetupState.text = "모집 확정"
+                                    binding.tvMeetupState.setBackgroundResource(R.drawable.bg_badge_confirmed)
                                     binding.btnConfirmGroup.visibility = View.GONE
                                 }
                                 confirmTask.addOnFailureListener {

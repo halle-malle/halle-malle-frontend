@@ -93,7 +93,7 @@
                         android:layout_marginEnd="4dp"
                         android:background="@drawable/bg_filter_selected"
                         android:gravity="center"
-                        android:text="운동🏸"
+                        android:text="🏸 운동"
                         android:textColor="@color/white"
                         android:textSize="12sp" />
 
@@ -104,7 +104,7 @@
                         android:layout_marginEnd="4dp"
                         android:background="@drawable/bg_filter_unselected"
                         android:gravity="center"
-                        android:text="스터디💻"
+                        android:text="💻 스터디"
                         android:textColor="@color/black"
                         android:textSize="12sp" />
 
@@ -115,7 +115,7 @@
                         android:layout_marginEnd="4dp"
                         android:background="@drawable/bg_filter_unselected"
                         android:gravity="center"
-                        android:text="맛집🍕"
+                        android:text="🍕 맛집"
                         android:textColor="@color/black"
                         android:textSize="12sp" />
 
@@ -126,7 +126,7 @@
                         android:layout_marginEnd="4dp"
                         android:background="@drawable/bg_filter_unselected"
                         android:gravity="center"
-                        android:text="취미🎸"
+                        android:text="🎸 취미"
                         android:textColor="@color/black"
                         android:textSize="12sp" />
 
@@ -137,7 +137,7 @@
                         android:layout_marginEnd="4dp"
                         android:background="@drawable/bg_filter_unselected"
                         android:gravity="center"
-                        android:text="기타💬"
+                        android:text="💬 기타"
                         android:textColor="@color/black"
                         android:textSize="12sp" />
 
