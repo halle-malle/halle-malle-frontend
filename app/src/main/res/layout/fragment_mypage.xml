@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="#FBF8EF"
     tools:context=".mypageFragment">
 
     <ScrollView
@@ -66,8 +66,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="48dp"
                             android:minWidth="64dp"
-                            android:backgroundTint="#EEE7F8"
-                            android:textColor="#53416C"
+                            android:backgroundTint="#EEF4E6"
+                            android:textColor="#3E6123"
                             android:text="수정" />
                     </LinearLayout>
 
