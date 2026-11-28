@@ -30,6 +30,20 @@ service cloud.firestore {
                 && request.resource.data.status == 0));
     }
 
+    // 방장 강퇴 : 방장이 자기 말고 다른 멤버 1명만 빼고, 인원 수도 맞게 줄이는 경우
+    function hostRemovesOneMember() {
+      let fields = request.resource.data.diff(resource.data).affectedKeys();
+      let before = resource.data.memberIds.toSet();
+      let after = request.resource.data.memberIds.toSet();
+      let removed = before.difference(after);
+      return fields.hasOnly(['memberIds', 'memberCount'])
+        && request.resource.data.memberIds.size() == after.size()
+        && request.resource.data.memberCount == after.size()
+        && after.difference(before).size() == 0
+        && removed.size() == 1
+        && !removed.hasAny([resource.data.hostId]);
+    }
+
     // Keep the existing access policy for unrelated app collections.
     match /{collection}/{document=**} {
       allow read, write: if signedIn()
@@ -52,7 +66,8 @@ service cloud.firestore {
         && resource.data.status != 2
         && request.resource.data.status != 2
         && (changesOnlyOwnMembership()
-            || (isHost() && request.resource.data.memberIds == resource.data.memberIds));
+            || (isHost() && request.resource.data.memberIds == resource.data.memberIds)
+            || (isHost() && hostRemovesOneMember()));
     }
 
     match /groups/{groupId}/{subcollection}/{document=**} {

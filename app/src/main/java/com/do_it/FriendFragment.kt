@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
@@ -75,13 +76,17 @@ class FriendFragment : Fragment() {
                             builder2.setNegativeButton("취소", null)
                             builder2.show()
                         } else {
-                            // 신고 : 한 번 더 물어보고 신고
+                            // 신고 : 신고 내용을 입력받고 신고
+                            val editText = EditText(requireContext())
+                            editText.hint = "신고 내용을 적어주세요"
+
                             val builder3 = AlertDialog.Builder(requireContext())
                             builder3.setTitle("신고")
                             builder3.setMessage("${item.nickname}님을 신고할까요?")
+                            builder3.setView(editText)
                             builder3.setPositiveButton("신고", object: DialogInterface.OnClickListener {
                                 override fun onClick(dialog: DialogInterface?, which: Int) {
-                                    friendAdapter.reportFriend(item)
+                                    friendAdapter.reportFriend(item, editText.text.toString().trim())
                                 }
                             })
                             builder3.setNegativeButton("취소", null)

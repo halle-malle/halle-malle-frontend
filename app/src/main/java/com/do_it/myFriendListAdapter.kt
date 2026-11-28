@@ -113,8 +113,8 @@ class friendListAdapter (
         }
     }
 
-    fun reportFriend(item: userData) {
-        // firestore에서 신고 횟수 읽어서 1 올리기 : 문서 id = 신고당한 사람 uid
+    fun reportFriend(item: userData, content: String) {
+        // firestore에서 신고 횟수 읽어서 1 올리고 신고 로그 저장 : 문서 id = 신고당한 사람 uid
         val colref : CollectionReference = db.collection("reports")
         val docref : DocumentReference = colref.document(item.id)
         val task = docref.get()
@@ -130,6 +130,11 @@ class friendListAdapter (
                 reportedAt = System.currentTimeMillis()
             ))
             task2.addOnSuccessListener {
+                // 신고 로그 저장 : reports/신고당한사람uid/logs
+                docref.collection("logs").add(reportLogData(
+                    content = content,
+                    createdAt = System.currentTimeMillis()
+                ))
                 toast("신고가 접수되었습니다.")
             }
             task2.addOnFailureListener { error ->

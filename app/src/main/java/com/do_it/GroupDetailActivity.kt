@@ -6,11 +6,14 @@ import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import android.text.format.DateFormat
 import android.view.View
+import android.widget.EditText
 import android.widget.Toast
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.functions.FirebaseFunctionsException
 import com.do_it.MyApplication.Companion.auth
 import com.do_it.MyApplication.Companion.db
+import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.DocumentReference
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContentProviderCompat.requireContext
@@ -27,6 +30,7 @@ class GroupDetailActivity : AppCompatActivity() {
 
     private lateinit var adapter: detailMemberAdapter
     private val memberList = mutableListOf<memberData>()   // 함께하는 멤버 목록
+    private var hostId = ""   // 방장 uid (모임 정보를 불러온 뒤 저장)
 
     override fun onStart() {
         super.onStart()
@@ -67,22 +71,156 @@ class GroupDetailActivity : AppCompatActivity() {
         }
     }
 
-    // 모임 탈퇴 : members에서 내 문서를 지우고, 모임의 memberIds와 memberCount 수정
-    private fun leaveGroup(groupId: String, uid: String, item: GroupData) {
+    // 모임 탈퇴 : 트랜잭션으로 최신 모임 정보를 읽고 확인한 다음 한 번에 수정
+    // (읽고 쓰는 사이에 다른 사람이 참여/탈퇴하면 Firestore가 자동으로 다시 실행)
+    private fun leaveGroup(groupId: String, uid: String) {
         val ref = db.collection("groups").document(groupId)
+        val memberRef = ref.collection("members").document(uid)
 
-        ref.collection("members").document(uid).delete()
-
-        val task = ref.update(
-            "memberIds", item.memberIds - uid,
-            "memberCount", item.memberCount - 1
-        )
-        task.addOnSuccessListener {
-            Toast.makeText(baseContext, "모임에서 나왔어요.", Toast.LENGTH_SHORT).show()
-            finish()
+        val task = db.runTransaction { transaction ->
+            val item = transaction.get(ref).toObject(GroupData::class.java)
+            // 모임이 없거나, 그 사이에 확정됐거나, 이미 나간 경우
+            if (item == null || item.status != GroupData.STATUS_RECRUITING || !item.memberIds.contains(uid)) {
+                return@runTransaction false
+            }
+            transaction.update(ref,
+                "memberIds", item.memberIds - uid,
+                "memberCount", item.memberCount - 1
+            )
+            transaction.delete(memberRef)   // members 문서 삭제도 같이 (둘 다 되거나 둘 다 안 되거나)
+            return@runTransaction true
+        }
+        task.addOnSuccessListener { left ->
+            if (left) {
+                Toast.makeText(baseContext, "모임에서 나왔어요.", Toast.LENGTH_SHORT).show()
+                finish()
+            } else {
+                Toast.makeText(baseContext, "모집이 끝난 모임은 나갈 수 없어요.", Toast.LENGTH_SHORT).show()
+            }
         }
         task.addOnFailureListener {
             Toast.makeText(baseContext, "탈퇴 실패", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // 멤버 길게 클릭 : 방장이면 신고/강퇴 선택, 방장이 아니면 바로 신고 다이얼로그
+    private fun showMemberMenu(groupId: String, member: memberData) {
+        val myId = auth.currentUser?.uid ?: return
+        if (member.userId == myId) return   // 나 자신은 신고/강퇴 안 됨
+
+        if (hostId != myId) {
+            showReportDialog(member)
+            return
+        }
+
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle(member.name)
+        builder.setItems(arrayOf("신고", "강퇴"), object: DialogInterface.OnClickListener {
+            override fun onClick(dialog: DialogInterface?, which: Int) {
+                if (which == 0) {
+                    showReportDialog(member)
+                } else {
+                    showKickDialog(groupId, member)
+                }
+            }
+        })
+        builder.setNegativeButton("취소", null)
+        builder.show()
+    }
+
+    // 신고 : 신고 내용을 입력받고 신고
+    private fun showReportDialog(member: memberData) {
+        val editText = EditText(this)
+        editText.hint = "신고 내용을 적어주세요"
+
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("신고")
+        builder.setMessage("${member.name}님을 신고할까요?")
+        builder.setView(editText)
+        builder.setPositiveButton("신고", object: DialogInterface.OnClickListener {
+            override fun onClick(dialog: DialogInterface?, which: Int) {
+                reportMember(member, editText.text.toString().trim())
+            }
+        })
+        builder.setNegativeButton("취소", null)
+        builder.show()
+    }
+
+    // 강퇴 : 한 번 더 물어보고 강퇴
+    private fun showKickDialog(groupId: String, member: memberData) {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("강퇴")
+        builder.setMessage("${member.name}님을 모임에서 내보낼까요?")
+        builder.setPositiveButton("강퇴", object: DialogInterface.OnClickListener {
+            override fun onClick(dialog: DialogInterface?, which: Int) {
+                kickMember(groupId, member)
+            }
+        })
+        builder.setNegativeButton("취소", null)
+        builder.show()
+    }
+
+    // 신고 : 친구 목록 신고(reportFriend)와 같은 방식, 신고 횟수 읽어서 1 올리고 신고 로그 저장
+    private fun reportMember(member: memberData, content: String) {
+        val colref : CollectionReference = db.collection("reports")
+        val docref : DocumentReference = colref.document(member.userId)
+        val task = docref.get()
+        task.addOnSuccessListener {
+            val report = it.toObject(reportData::class.java)
+            var count = 0
+            if (report != null)   // 처음 신고당하는 경우는 문서가 없어서 null
+                count = report.count
+
+            val task2 = docref.set(reportData(
+                userId = member.userId,
+                count = count + 1,
+                reportedAt = System.currentTimeMillis()
+            ))
+            task2.addOnSuccessListener {
+                // 신고 로그 저장 : reports/신고당한사람uid/logs
+                docref.collection("logs").add(reportLogData(
+                    content = content,
+                    createdAt = System.currentTimeMillis()
+                ))
+                Toast.makeText(baseContext, "신고가 접수되었습니다.", Toast.LENGTH_SHORT).show()
+            }
+            task2.addOnFailureListener { error ->
+                Toast.makeText(baseContext, "신고에 실패했습니다: ${error.localizedMessage}", Toast.LENGTH_SHORT).show()
+            }
+        }
+        task.addOnFailureListener { error ->
+            Toast.makeText(baseContext, "신고에 실패했습니다: ${error.localizedMessage}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // 강퇴 (방장만) : 모임 탈퇴(leaveGroup)와 같은 방식, 끝나면 화면 다시 불러오기
+    private fun kickMember(groupId: String, member: memberData) {
+        val ref = db.collection("groups").document(groupId)
+        val memberRef = ref.collection("members").document(member.userId)
+
+        val task = db.runTransaction { transaction ->
+            val item = transaction.get(ref).toObject(GroupData::class.java)
+            // 모임이 없거나, 이미 나간 멤버인 경우
+            if (item == null || !item.memberIds.contains(member.userId)) {
+                return@runTransaction false
+            }
+            transaction.update(ref,
+                "memberIds", item.memberIds - member.userId,
+                "memberCount", item.memberCount - 1
+            )
+            transaction.delete(memberRef)
+            return@runTransaction true
+        }
+        task.addOnSuccessListener { kicked ->
+            if (kicked) {
+                Toast.makeText(baseContext, "${member.name}님을 내보냈어요.", Toast.LENGTH_SHORT).show()
+                recreate()   // 멤버 목록, 인원 수 다시 불러오기
+            } else {
+                Toast.makeText(baseContext, "이미 모임에 없는 멤버예요.", Toast.LENGTH_SHORT).show()
+            }
+        }
+        task.addOnFailureListener {
+            Toast.makeText(baseContext, "강퇴 실패", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -113,7 +251,7 @@ class GroupDetailActivity : AppCompatActivity() {
         }
         binding.tvNewCount.visibility = View.GONE   // 새 메시지 수는 아직 없어서 숨김
 
-        adapter = detailMemberAdapter(memberList) { member ->
+        adapter = detailMemberAdapter(memberList, { member ->
             val myId = auth.currentUser?.uid ?: return@detailMemberAdapter
             val ref = db.collection("users").document(member.userId).collection("friends").document(myId)
             ref.get().addOnSuccessListener {
@@ -125,7 +263,9 @@ class GroupDetailActivity : AppCompatActivity() {
                     .addOnSuccessListener { Toast.makeText(baseContext, "친구 요청을 보냈어요.", Toast.LENGTH_SHORT).show() }
                     .addOnFailureListener { Toast.makeText(baseContext, "요청 실패", Toast.LENGTH_SHORT).show() }
             }
-        }
+        }, { member ->
+            showMemberMenu(groupId, member)   // 길게 클릭 : 신고 (방장이면 강퇴도)
+        })
         binding.rvMember.layoutManager = LinearLayoutManager(this)
         binding.rvMember.adapter = adapter
         binding.rvMember.addItemDecoration(DividerItemDecoration(this,
@@ -136,6 +276,7 @@ class GroupDetailActivity : AppCompatActivity() {
         task.addOnSuccessListener {
             val item = it.toObject(GroupData::class.java)
             if (item == null) return@addOnSuccessListener
+            hostId = item.hostId   // 멤버 길게 클릭할 때 방장인지 확인용
 
             // 카테고리 이모지 모임 이름 앞에 붙이기
             val emoji = when (item.category) {
@@ -146,12 +287,13 @@ class GroupDetailActivity : AppCompatActivity() {
                 else -> "💬"
             }
             binding.tvGroupName.text = emoji + " " + item.title
-            binding.tvCategory.text = if (item.category.isEmpty()) "기타" else item.category
+            binding.tvCategory.text = if (item.category.isEmpty()) "💬 기타" else emoji + " " + item.category
             // 모집 상태
             val started = item.dateTime < System.currentTimeMillis()
             val past = item.status == GroupData.STATUS_FINISHED || item.dateTime + GroupData.END_TIME < System.currentTimeMillis()
             if (item.status == GroupData.STATUS_CANCELED) {
                 binding.tvMeetupState.text = "모임 취소"
+                binding.tvMeetupState.setBackgroundResource(R.drawable.bg_badge_past)
                 binding.btnGroupChat.visibility = View.GONE
             } else if (past) {
                 binding.tvMeetupState.text = "지난 모임"
@@ -190,6 +332,7 @@ class GroupDetailActivity : AppCompatActivity() {
                                     binding.btnCancelVote.visibility = View.GONE
                                     if (result?.get("canceled") == true) {
                                         binding.tvMeetupState.text = "모임 취소"
+                                        binding.tvMeetupState.setBackgroundResource(R.drawable.bg_badge_past)
                                         binding.btnDeleteGroup.visibility = View.GONE
                                         binding.btnGroupChat.visibility = View.GONE
                                         Toast.makeText(this, "모임이 취소되었습니다.", Toast.LENGTH_SHORT).show()
@@ -297,7 +440,7 @@ class GroupDetailActivity : AppCompatActivity() {
                     builder.setMessage("모임에서 나갈까요?")
                     builder.setPositiveButton("탈퇴", object: DialogInterface.OnClickListener {
                         override fun onClick(dialog: DialogInterface?, which: Int) {
-                            leaveGroup(groupId, uid, item)
+                            leaveGroup(groupId, uid)
                         }
                     })
                     builder.setNegativeButton("취소", null)
@@ -309,7 +452,7 @@ class GroupDetailActivity : AppCompatActivity() {
             db.collection("users").document(item.hostId).get().addOnSuccessListener {
                 val user = it.toObject(userData::class.java)
                 if (user != null) {
-                    binding.tv.text = user.email
+                    binding.tv.text = user.nickname
                 } else {
                     binding.tv.text = "알 수 없음"   // users에 회원 정보가 없는 경우
                 }
@@ -325,11 +468,11 @@ class GroupDetailActivity : AppCompatActivity() {
                 val member = document.toObject(memberData::class.java)
                 db.collection("users").document(member.userId).get().addOnSuccessListener {
                     val user = it.toObject(userData::class.java)
-                    var name = member.name   // 참여할 때 저장해 둔 이메일
+                    var name = ""   // users에 회원 정보가 없으면 아래에서 "알 수 없음"
                     var intro = ""
                     if (user != null) {
-                        name = user.email
-                        intro = user.intro
+                        name = user.nickname
+                        intro = user.bio
                     }
                     if (name.isEmpty()) {
                         name = "알 수 없음"

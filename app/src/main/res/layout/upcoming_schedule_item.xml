@@ -29,8 +29,8 @@
             android:id="@+id/tvConfirmed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="4dp"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="6dp"
 
             android:text="모집 확정"
             android:textColor="@android:color/background_light"

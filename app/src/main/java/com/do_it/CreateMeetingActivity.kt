@@ -242,7 +242,6 @@ class CreateMeetingActivity : AppCompatActivity(), OnMapReadyCallback {
                     ref.collection("members").document(uid).set(memberData(
                         meetingId = ref.id,
                         userId = uid,
-                        name = MyApplication.auth.currentUser?.email ?: "",
                         role = memberData.ROLE_HOST,
                         joinedAt = System.currentTimeMillis()
                         )

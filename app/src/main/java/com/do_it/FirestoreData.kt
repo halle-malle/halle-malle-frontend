@@ -4,8 +4,8 @@ data class userData (
     val id:String = "",
     val email:String = "",
     val nickname:String= "",
-    val intro:String = "",
-    val profileImage: String = "",
+    val bio:String = "",
+    val profileImageUrl: String = "",
     val trustScore:Int= 0,
     val createdAt: Long=0L
 )
@@ -76,4 +76,10 @@ data class reportData(
     val userId: String = "",         // 신고당한 사람 uid
     val count: Int = 0,              // 신고 횟수
     val reportedAt: Long = 0L        // 마지막 신고 시각
+)
+
+// 신고 로그 : reports/신고당한사람uid/logs 에 신고할 때마다 하나씩 저장
+data class reportLogData(
+    val content: String = "",        // 신고 내용
+    val createdAt: Long = 0L         // 신고 시각
 )

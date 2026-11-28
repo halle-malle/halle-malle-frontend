@@ -85,7 +85,6 @@ class PinBottomSheetFragment : BottomSheetDialogFragment() {
             ref.collection("members").document(uid).set(memberData(
                 meetingId = item.id,
                 userId = uid,
-                name = auth.currentUser?.email ?: "",
                 role = memberData.ROLE_MEMBER,
                 status = memberData.STATUS_JOINED,
                 joinedAt = System.currentTimeMillis()
@@ -121,15 +120,26 @@ class PinBottomSheetFragment : BottomSheetDialogFragment() {
             binding.btnJoin.text = "참여 중"
         }
 
-        // 카테고리
+        // 카테고리 : 지도 필터처럼 아이콘을 앞에 붙이기
         if (item.category.isEmpty()) {
-            binding.tvCategory.text = "기타"
+            binding.tvCategory.text = "💬 기타"
         } else {
-            binding.tvCategory.text = item.category
+            binding.tvCategory.text = emoji + " " + item.category
         }
 
-        // 모집 상태
-        if (item.status == GroupData.STATUS_CONFIRMED) {
+        // 모집 상태 (모임 상세 화면과 같은 기준)
+        val started = item.dateTime < System.currentTimeMillis()
+        val past = item.status == GroupData.STATUS_FINISHED || item.dateTime + GroupData.END_TIME < System.currentTimeMillis()
+        if (item.status == GroupData.STATUS_CANCELED) {
+            binding.tvStatus.text = "모임 취소"
+            binding.tvStatus.setBackgroundResource(R.drawable.bg_badge_past)
+        } else if (past) {
+            binding.tvStatus.text = "지난 모임"
+            binding.tvStatus.setBackgroundResource(R.drawable.bg_badge_past)
+        } else if (started) {
+            binding.tvStatus.text = "모임 중"
+            binding.tvStatus.setBackgroundResource(R.drawable.bg_badge_ongoing)
+        } else if (item.status == GroupData.STATUS_CONFIRMED) {
             binding.tvStatus.text = "모집 확정"
             binding.tvStatus.setBackgroundResource(R.drawable.bg_badge_confirmed)
         } else {
@@ -155,6 +165,7 @@ class PinBottomSheetFragment : BottomSheetDialogFragment() {
         }
 
         // 방장 이름은 users 컬렉션에서 가져오기
+        // 방장 이름, 프로필 사진은 users 컬렉션에서 가져오기
         if (item.hostId.isNotEmpty()) {
             val userTask = db.collection("users").document(item.hostId).get()
             userTask.addOnSuccessListener {
@@ -162,8 +173,26 @@ class PinBottomSheetFragment : BottomSheetDialogFragment() {
                 if (user == null) {
                     binding.tvHost.text = "방장"
                 } else {
-                    binding.tvHost.text = "${user.email} (방장)"
+                    binding.tvHost.text = "${user.nickname} (방장)"
+                    ProfileImageLoader.load(binding.ivHost, user.profileImageUrl)
                 }
+            }
+        }
+
+        // 참여 멤버 프로필 사진 : 멤버 수만큼 (최대 3명) 보여주기
+        val memberViews = listOf(binding.ivMember1, binding.ivMember2, binding.ivMember3)
+        for (i in memberViews.indices) {
+            if (i < item.memberIds.size) {
+                memberViews[i].visibility = View.VISIBLE
+                val memberTask = db.collection("users").document(item.memberIds[i]).get()
+                memberTask.addOnSuccessListener {
+                    val user = it.toObject(userData::class.java)
+                    if (user != null) {
+                        ProfileImageLoader.load(memberViews[i], user.profileImageUrl)
+                    }
+                }
+            } else {
+                memberViews[i].visibility = View.GONE
             }
         }
     }

@@ -17,7 +17,8 @@ class detailMemberViewHolder(
 
 class detailMemberAdapter (
     private val list: List<memberData>,
-    private val onItemClickAddFriend: (memberData) -> Unit
+    private val onItemClickAddFriend: (memberData) -> Unit,
+    private val onItemLongClick: (memberData) -> Unit // 항목 길게 클릭시 호출
 ): RecyclerView.Adapter<detailMemberViewHolder>() {
 
     private var friendIds = emptySet<String>()
@@ -64,7 +65,10 @@ class detailMemberAdapter (
                 onItemClickAddFriend(item)
             }
         }
-
+        holder.binding.root.setOnLongClickListener {
+            onItemLongClick(item)
+            return@setOnLongClickListener true
+        }
 
 
 
