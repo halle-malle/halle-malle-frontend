@@ -61,6 +61,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         intent.putExtra("type", data["type"])
         intent.putExtra("groupId", data["groupId"])
         intent.putExtra("recipientUid", data["recipientUid"])
+        intent.putExtra("notificationId", data["notificationId"])
 
         val pendingIntent = PendingIntent.getActivity(
             this, notificationId, intent,

@@ -5,7 +5,8 @@ const {onDocumentCreated, onDocumentUpdated} =
 const {onCall, HttpsError} = require("firebase-functions/v2/https");
 const {onSchedule} = require("firebase-functions/v2/scheduler");
 const {initializeApp} = require("firebase-admin/app");
-const {FieldValue, getFirestore} = require("firebase-admin/firestore");
+const {FieldValue, Timestamp, getFirestore} =
+    require("firebase-admin/firestore");
 const {getMessaging} = require("firebase-admin/messaging");
 
 initializeApp();
@@ -176,12 +177,15 @@ async function sendGroupMemberNotification(
 ) {
   const db = getFirestore();
   const id = createHash("sha256").update(type + ":" + eventId).digest("hex");
-  const item = db.collection("notificationInboxes").doc(uid)
-      .collection("items").doc(id);
+  const inbox = db.collection("notificationInboxes").doc(uid);
+  const item = inbox.collection("items").doc(id);
   try {
-    await item.create({
+    const batch = db.batch();
+    batch.create(item, {
       title, body, type, groupId, createdAt: FieldValue.serverTimestamp(),
     });
+    batch.set(inbox, {changedAt: FieldValue.serverTimestamp()}, {merge: true});
+    await batch.commit();
   } catch (error) {
     if (error.code === 6) return; // Duplicate delivery of the same event.
     throw error;
@@ -196,7 +200,7 @@ async function sendGroupMemberNotification(
   const message = {
     token,
     notification: {title, body},
-    data: {type, groupId, recipientUid: uid},
+    data: {type, groupId, recipientUid: uid, notificationId: id},
   };
   if (type === "group_chat") {
     message.android = {
@@ -225,11 +229,79 @@ exports.listNotifications = onCall({region: "asia-northeast3"}, async (req) => {
   return {
     items: docs.map((doc) => {
       const {title, body, type, groupId, createdAt} = doc.data();
-      return {title, body, type, groupId, createdAt: createdAt.toMillis()};
+      return {
+        id: doc.id, title, body, type, groupId, createdAt: createdAt.toMillis(),
+        read: doc.get("read") === true,
+      };
     }),
     nextCursor: page.size > 50 ? docs[49].id : null,
   };
 });
+
+exports.getNotificationUnreadCount = onCall(
+    {region: "asia-northeast3"},
+    async (req) => {
+      if (!req.auth) {
+        throw new HttpsError("unauthenticated", "로그인이 필요해요.");
+      }
+      const items = getFirestore().collection("notificationInboxes")
+          .doc(req.auth.uid).collection("items");
+      const [total, read] = await Promise.all([
+        items.count().get(),
+        items.where("read", "==", true).count().get(),
+      ]);
+      return {unread: Math.max(0, total.data().count - read.data().count)};
+    },
+);
+
+exports.markNotificationRead = onCall(
+    {region: "asia-northeast3"},
+    async (req) => {
+      if (!req.auth) {
+        throw new HttpsError("unauthenticated", "로그인이 필요해요.");
+      }
+      const id = req.data && req.data.id;
+      if (typeof id !== "string" || !/^[a-f0-9]{64}$/.test(id)) {
+        throw new HttpsError("invalid-argument", "잘못된 알림이에요.");
+      }
+      const db = getFirestore();
+      const inbox = db.collection("notificationInboxes").doc(req.auth.uid);
+      const item = inbox.collection("items").doc(id);
+      await db.runTransaction(async (transaction) => {
+        const current = await transaction.get(item);
+        if (!current.exists || current.get("read") === true) return;
+        transaction.update(item, {read: true});
+        transaction.set(inbox, {changedAt: FieldValue.serverTimestamp()},
+            {merge: true});
+      });
+      return {read: true};
+    },
+);
+
+exports.clearNotificationHistory = onCall(
+    {region: "asia-northeast3"},
+    async (req) => {
+      if (!req.auth) {
+        throw new HttpsError("unauthenticated", "로그인이 필요해요.");
+      }
+
+      const db = getFirestore();
+      const cutoff = Timestamp.now();
+      const inbox = db.collection("notificationInboxes").doc(req.auth.uid);
+      const items = inbox.collection("items");
+      const query = items.where("createdAt", "<=", cutoff).limit(400);
+      let page = await query.get();
+      while (!page.empty) {
+        const batch = db.batch();
+        page.docs.forEach((doc) => batch.delete(doc.ref));
+        batch.set(inbox, {changedAt: FieldValue.serverTimestamp()},
+            {merge: true});
+        await batch.commit();
+        page = await query.get();
+      }
+      return {cleared: true};
+    },
+);
 
 exports.castGroupCancellationVote = onCall(
     {region: "asia-northeast3"},
