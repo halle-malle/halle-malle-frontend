@@ -329,7 +329,7 @@
                 android:layout_weight="1"
                 android:background="@drawable/bg_status_card_white"
                 android:gravity="center"
-                android:text="모임 취소 투표"
+                android:text="모임 취소"
                 android:textColor="#222222"
                 android:textSize="14sp"
                 android:textStyle="bold"

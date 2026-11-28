@@ -62,11 +62,11 @@ service cloud.firestore {
         && request.resource.data.hostId == request.auth.uid
         && request.resource.data.memberIds == [request.auth.uid]
         && request.resource.data.status == 0
-        && !request.resource.data.keys().hasAny(['canceledByVote', 'cancelVoteUpdatedAt', 'cancelVoteRound']);
+        && !request.resource.data.keys().hasAny(['canceledByVote', 'cancelVoteUpdatedAt', 'cancelVoteRound', 'cancelApprovalCount']);
       allow delete: if false;
       allow update: if signedIn()
         && !request.resource.data.diff(resource.data).affectedKeys()
-             .hasAny(['hostId', 'canceledByVote', 'cancelVoteUpdatedAt', 'cancelVoteRound'])
+             .hasAny(['hostId', 'canceledByVote', 'cancelVoteUpdatedAt', 'cancelVoteRound', 'cancelApprovalCount'])
         && resource.data.status != 2
         && request.resource.data.status != 2
         && (changesOnlyOwnMembership()
@@ -85,6 +85,14 @@ service cloud.firestore {
 
     match /groups/{groupId}/chats/{chatId} {
       allow read, create, update: if signedIn();
+    }
+
+    match /groups/{groupId}/cancelVotes/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+    }
+
+    match /groups/{groupId}/cancelVotes/{round}/ballots/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
     }
 
     match /groups/{groupId}/{subcollection}/{document=**} {
