@@ -58,11 +58,11 @@ service cloud.firestore {
         && request.resource.data.hostId == request.auth.uid
         && request.resource.data.memberIds == [request.auth.uid]
         && request.resource.data.status == 0
-        && !request.resource.data.keys().hasAny(['canceledByVote', 'cancelVoteUpdatedAt']);
-      allow delete: if signedIn() && isHost();
+        && !request.resource.data.keys().hasAny(['canceledByVote', 'cancelVoteUpdatedAt', 'cancelVoteRound']);
+      allow delete: if false;
       allow update: if signedIn()
         && !request.resource.data.diff(resource.data).affectedKeys()
-             .hasAny(['hostId', 'canceledByVote', 'cancelVoteUpdatedAt'])
+             .hasAny(['hostId', 'canceledByVote', 'cancelVoteUpdatedAt', 'cancelVoteRound'])
         && resource.data.status != 2
         && request.resource.data.status != 2
         && (changesOnlyOwnMembership()
@@ -70,8 +70,22 @@ service cloud.firestore {
             || (isHost() && hostRemovesOneMember()));
     }
 
+    match /groups/{groupId}/members/{memberId} {
+      allow read, create, update: if signedIn();
+      // 본인 탈퇴 또는 방장 강퇴 (방장 자신의 멤버 문서는 삭제 불가)
+      allow delete: if signedIn()
+        && get(/databases/$(database)/documents/groups/$(groupId)).data.hostId != memberId
+        && (request.auth.uid == memberId
+            || get(/databases/$(database)/documents/groups/$(groupId)).data.hostId == request.auth.uid);
+    }
+
+    match /groups/{groupId}/chats/{chatId} {
+      allow read, create, update: if signedIn();
+    }
+
     match /groups/{groupId}/{subcollection}/{document=**} {
-      allow read, write: if signedIn() && subcollection != 'cancelVotes';
+      allow read, write: if signedIn()
+        && !(subcollection in ['cancelVotes', 'members', 'chats']);
     }
   }
 }
