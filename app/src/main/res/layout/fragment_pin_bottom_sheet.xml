@@ -210,7 +210,7 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="20dp"
-            android:backgroundTint="#666666"
+            android:backgroundTint="#4C722E"
             app:cornerRadius="0dp"
             android:insetTop="0dp"
             android:insetBottom="0dp"
