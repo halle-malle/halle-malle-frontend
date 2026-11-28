@@ -141,7 +141,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="계속하면 이용약관과 개인정보 처리방침에 동의하게 돼요."
+            android:text="계속하면 사용 규칙과 개인정보 처리방침에 동의하게 돼요."
             android:textColor="#BBBBBB"
             android:textSize="10sp" />
 

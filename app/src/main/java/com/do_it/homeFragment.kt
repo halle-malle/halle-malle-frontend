@@ -54,7 +54,12 @@ class homeFragment : Fragment() {
                 intent.putExtra("groupId", item.id)
                 startActivity(intent)
             },
-            { message -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show()}
+            { message -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show()},
+            { count ->
+                // 다가오는 일정이 없으면 안내 글자 보여주기
+                if (count == 0) binding.tvUpcomingEmpty.visibility = View.VISIBLE
+                else binding.tvUpcomingEmpty.visibility = View.GONE
+            }
         )
         binding.rvUpcoming.adapter = upcomingAdapter
         PagerSnapHelper().attachToRecyclerView(binding.rvUpcoming)
@@ -80,6 +85,8 @@ class homeFragment : Fragment() {
             },
             { count ->
                 binding.textView7.text = "내가 연 모임(${count})"
+                if (count == 0) binding.tvCreatedEmpty.visibility = View.VISIBLE
+                else binding.tvCreatedEmpty.visibility = View.GONE
             }
         )
 
@@ -95,6 +102,8 @@ class homeFragment : Fragment() {
             },
             { count ->
                 binding.textView5.text = "참여 중인 모임(${count})"
+                if (count == 0) binding.tvJoinedEmpty.visibility = View.VISIBLE
+                else binding.tvJoinedEmpty.visibility = View.GONE
             }
         )
 

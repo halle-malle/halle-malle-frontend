@@ -47,7 +47,6 @@ class CreateMeetingActivity : AppCompatActivity(), OnMapReadyCallback {
     private var date: LocalDate = LocalDate.now()   // 선택한 날짜
     private val calendar = Calendar.getInstance()   // 선택한 시간 저장 (처음엔 현재 시간)
     private var dateTime = 0L   // 선택한 모임 일시 (0이면 아직 선택 안 함)
-    private var address = ""   // 핀 찍은 곳 주소
 
     // 위치 선택 화면에서 찍은 위치, 주소 받기
     private val locationLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -56,8 +55,8 @@ class CreateMeetingActivity : AppCompatActivity(), OnMapReadyCallback {
             val latitude = rIntent.getDoubleExtra("latitude", 0.0)
             val longitude = rIntent.getDoubleExtra("longitude", 0.0)
             selectedLatLng = LatLng(latitude, longitude)
-            address = rIntent.getStringExtra("address") ?: ""
-            binding.tvAddress.text = address
+            binding.tvAddress.text = rIntent.getStringExtra("address") ?: ""
+            binding.etPlaceName.setText(rIntent.getStringExtra("placeName") ?: "")
 
             // 미리보기 지도에 고른 위치 핀 찍고 그 위치 보여주기
             mMap.clear()
@@ -144,7 +143,7 @@ class CreateMeetingActivity : AppCompatActivity(), OnMapReadyCallback {
             .findFragmentById(R.id.acmMap) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        // 위치 지정 : 주소 줄(지정/변경 버튼 포함)을 누르면 위치 선택 화면으로 이동
+        // 위치 지정 : 주소 줄(지정 버튼 포함)을 누르면 위치 선택 화면으로 이동
         binding.layoutLocation.setOnClickListener {
             openSelectLocation()
         }
@@ -215,6 +214,11 @@ class CreateMeetingActivity : AppCompatActivity(), OnMapReadyCallback {
                     Toast.makeText(baseContext, "모임 장소를 지정해주세요.", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
+                val placeName = binding.etPlaceName.text.toString().trim()
+                if (placeName.isEmpty()) {
+                    Toast.makeText(baseContext, "장소 이름을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
                 val ref = MyApplication.db.collection("groups").document()
 
                 val group = GroupData(
@@ -225,7 +229,8 @@ class CreateMeetingActivity : AppCompatActivity(), OnMapReadyCallback {
                     category = category,
                     description = binding.etDetail.text.toString(),
                     dateTime = dateTime,
-                    place = address,
+                    place = placeName,
+                    address = binding.tvAddress.text.toString(),
                     maxMember = binding.seekBarMember.progress,
                     memberCount = 1,
                     createdAt = System.currentTimeMillis(),

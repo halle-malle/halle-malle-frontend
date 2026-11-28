@@ -123,23 +123,19 @@ class mapFragment : Fragment(), OnMapReadyCallback {
                 return@setOnClickListener
             }
 
-            val results = groupList.filter { it.title.contains(keyword) || it.place.contains(keyword) }
+            val results = groupList.filter { it.title.contains(keyword) || it.place.contains(keyword) || it.address.contains(keyword) }
             if (results.isEmpty()) {
                 Toast.makeText(context, "검색 결과가 없어요.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             val sheet = SearchBottomSheetFragment()
-            sheet.keyword = keyword
+            sheet.title = "'${keyword}' 검색 결과 ${results.size}개"
             sheet.results = results
             // 결과를 누르면 그 모임 위치로 이동하고 모임 정보 바텀시트 띄우기
             sheet.onItemClick = { item ->
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(item.latitude, item.longitude), 16.0f))
-
-                val pinSheet = PinBottomSheetFragment()
-                pinSheet.arguments = bundleOf("groupId" to item.id)
-                pinSheet.setStyle(DialogFragment.STYLE_NORMAL, R.style.AppBottomSheetDialogBorder20WhiteTheme)
-                pinSheet.show(parentFragmentManager, "pin")
+                showPinSheet(item.id)
             }
             sheet.setStyle(DialogFragment.STYLE_NORMAL, R.style.AppBottomSheetDialogBorder20WhiteTheme)
             sheet.show(parentFragmentManager, "search")
@@ -149,15 +145,36 @@ class mapFragment : Fragment(), OnMapReadyCallback {
         mMap.setOnMarkerClickListener { marker ->
             val groupId = marker.tag as String?
             if (groupId != null) {
-                val bundle = bundleOf("groupId" to groupId)
+                // 누른 핀 근처(약 50m)에 있는 모임 찾기 (핀이 겹쳐서 뒤에 있는 핀을 못 누르는 경우)
+                val pos = marker.position
+                val nearList = groupList.filter {
+                    (filter == "전체" || it.category == filter) &&
+                    Math.abs(it.latitude - pos.latitude) < 0.0005 &&
+                    Math.abs(it.longitude - pos.longitude) < 0.0005
+                }
 
-                val sheet = PinBottomSheetFragment()
-                sheet.arguments = bundle
-                sheet.setStyle(DialogFragment.STYLE_NORMAL, R.style.AppBottomSheetDialogBorder20WhiteTheme)
-                sheet.show(parentFragmentManager, "pin")
+                if (nearList.size > 1) {
+                    // 겹친 모임이 여러 개면 목록으로 보여주기
+                    val sheet = SearchBottomSheetFragment()
+                    sheet.title = "이 근처 모임 ${nearList.size}개"
+                    sheet.results = nearList
+                    sheet.onItemClick = { item -> showPinSheet(item.id) }
+                    sheet.setStyle(DialogFragment.STYLE_NORMAL, R.style.AppBottomSheetDialogBorder20WhiteTheme)
+                    sheet.show(parentFragmentManager, "near")
+                } else {
+                    showPinSheet(groupId)
+                }
             }
             true
         }
+    }
+
+    // 모임 정보 바텀시트 띄우기
+    private fun showPinSheet(groupId: String) {
+        val sheet = PinBottomSheetFragment()
+        sheet.arguments = bundleOf("groupId" to groupId)
+        sheet.setStyle(DialogFragment.STYLE_NORMAL, R.style.AppBottomSheetDialogBorder20WhiteTheme)
+        sheet.show(parentFragmentManager, "pin")
     }
 
     // 필터 선택 : 같은 필터를 다시 누르면 전체 보기
@@ -182,9 +199,11 @@ class mapFragment : Fragment(), OnMapReadyCallback {
     private fun loadGroups() {
         val task = db.collection("groups").whereIn("status", listOf(0, 1)).get()
         task.addOnSuccessListener {
+            val now = System.currentTimeMillis()
             groupList.clear()
             for (document in it) {
                 val item = document.toObject(GroupData::class.java)
+                if (item.dateTime < now) continue   // 지난 모임 건너뛰기
                 groupList.add(item)
             }
             showMarkers()
