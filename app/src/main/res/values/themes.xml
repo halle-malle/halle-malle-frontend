@@ -2,13 +2,17 @@
     <!-- Base application theme. -->
     <style name="Theme.Hallemalle"  parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">#666666</item>
-        <item name="colorPrimaryVariant">#AEAEB2</item>
+        <item name="colorPrimary">#4C722E</item>
+        <item name="colorPrimaryVariant">#FBF8EF</item>
         <item name="colorOnPrimary">@color/white</item>
         <!-- Secondary brand color. -->
-        <item name="colorSecondary">#666666</item>
-        <item name="colorSecondaryVariant">#666666</item>
+        <item name="colorSecondary">#4C722E</item>
+        <item name="colorSecondaryVariant">#4C722E</item>
         <item name="colorOnSecondary">@color/black</item>
+        <!-- 하단 탭 선택 배경 색 바꾸기 -->
+        <item name="colorSecondaryContainer">#EEF4E6</item>
+        <item name="colorOnSecondaryContainer">#3E6123</item>
+        <item name="android:windowBackground">#FBF8EF</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->

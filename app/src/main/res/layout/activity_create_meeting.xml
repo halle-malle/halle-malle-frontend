@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="#FBF8EF"
     android:fitsSystemWindows="true"
     tools:context=".CreateMeetingActivity"
     >
@@ -14,7 +14,7 @@
         android:id="@+id/acmToolbar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@color/white"
+        android:background="#FBF8EF"
         app:navigationIcon="@drawable/outline_arrow_back_24"
         app:title="새 모임 만들기"
         app:titleTextColor="@color/black"
@@ -293,8 +293,8 @@
                 android:min="2"
                 android:max="20"
                 android:progress="2"
-                android:thumbTint="#666666"
-                android:progressTint="#666666" />
+                android:thumbTint="#4C722E"
+                android:progressTint="#4C722E" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -324,7 +324,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="20dp"
-                android:background="#666666"
+                android:background="#4C722E"
                 android:text="모임 만들기"
                 android:textColor="@color/white"
                 android:textSize="15sp"
