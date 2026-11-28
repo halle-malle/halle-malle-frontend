@@ -190,7 +190,7 @@ class SelectLocationActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    // 찍은 위치의 주소 보여주기 (위도, 경도 → 주소)
+    // 찍은 위치의 주소 보여주기
     private fun showAddress(latLng: LatLng) {
         val geocoder = Geocoder(this)
         try {

@@ -49,8 +49,8 @@ class listAdapter(
 
         holder.binding.tvTitle.text = item.title
         holder.binding.tvInfo.text = "${DateFormat.format("MM.dd (E) HH:mm", item.dateTime)} | ${item.place}"
-        // 모집 상태 (종료 → 지난 모임, 시작 시간이 지났으면 모임 중)
-        if (item.status == GroupData.STATUS_FINISHED) {
+        // 모집 상태
+        if (item.status == GroupData.STATUS_FINISHED || item.dateTime + GroupData.END_TIME < System.currentTimeMillis()) {
             holder.binding.tvStatus.text = "지난 모임"
         } else if (item.dateTime < System.currentTimeMillis()) {
             holder.binding.tvStatus.text = "모임 중"
@@ -84,6 +84,7 @@ class listAdapter(
             val dbList = mutableListOf<GroupData>()
             for(document in it) {
                 val item = document.toObject(GroupData::class.java)
+                if (item.dateTime + GroupData.END_TIME < System.currentTimeMillis()) continue   // 하루 지난 모임 건너뛰기
                 dbList.add(item)
             }
             list = dbList
@@ -106,6 +107,7 @@ class listAdapter(
             for(document in it) {
                 val item = document.toObject(GroupData::class.java)
                 if (item.hostId == uid) continue   // 내가 연 모임은 아래 "내가 연 모임"에 있어서 건너뛰기
+                if (item.dateTime + GroupData.END_TIME < System.currentTimeMillis()) continue   // 하루 지난 모임 건너뛰기
                 dbList.add(item)
             }
             list = dbList

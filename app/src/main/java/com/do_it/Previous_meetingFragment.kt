@@ -73,12 +73,11 @@ class Previous_meetingFragment : Fragment() {
                     currentBinding.buttonRetry.visibility = View.VISIBLE
                     return@addOnCompleteListener
                 }
-                val now = System.currentTimeMillis()
                 val meetings = mutableListOf<GroupData>()
                 for (document in task.result) {
                     val item = document.toObject(GroupData::class.java).copy(id = document.id)
                     if (item.status == GroupData.STATUS_CANCELED) continue
-                    if (item.status == GroupData.STATUS_FINISHED) {
+                    if (item.status == GroupData.STATUS_FINISHED || (item.dateTime > 0L && item.dateTime + GroupData.END_TIME < System.currentTimeMillis())) {
                         meetings.add(item)
                     }
                 }

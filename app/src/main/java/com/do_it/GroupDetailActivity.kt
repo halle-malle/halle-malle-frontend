@@ -122,9 +122,10 @@ class GroupDetailActivity : AppCompatActivity() {
 
             binding.tvGroupName.text = item.title
             binding.tvCategory.text = if (item.category.isEmpty()) "기타" else item.category
-            // 모집 상태 (종료 → 지난 모임, 시작 시간이 지났으면 모임 중)
+            // 모집 상태
             val started = item.dateTime < System.currentTimeMillis()
-            if (item.status == GroupData.STATUS_FINISHED) {
+            val past = item.status == GroupData.STATUS_FINISHED || item.dateTime + GroupData.END_TIME < System.currentTimeMillis()
+            if (past) {
                 binding.tvMeetupState.text = "지난 모임"
             } else if (started) {
                 binding.tvMeetupState.text = "모임 중"
@@ -138,13 +139,12 @@ class GroupDetailActivity : AppCompatActivity() {
             binding.tvMember.text = "${item.memberCount}/${item.maxMember}명"
             binding.textView22.text = "함께하는 멤버 (${item.memberCount})"
 
-            // 하단 버튼
-            // 시작 전 : 방장은 확정·삭제, 참여자는 탈퇴 / 모임 중 : 방장만 모임 종료 / 지난 모임 : 버튼 없음
+            // 방장 / 참여자 버튼
             val uid = auth.currentUser?.uid
-            if (started && item.status != GroupData.STATUS_FINISHED && item.hostId == uid) {
+            if (started && !past && item.hostId == uid) {
                 binding.btnDeleteGroup.text = "모임 종료"
                 binding.btnDeleteGroup.visibility = View.VISIBLE
-                // 모임 종료 버튼 : 한 번 더 물어보고 종료 (종료하면 지난 모임으로)
+                // 모임 종료 버튼
                 binding.btnDeleteGroup.setOnClickListener {
                     val builder = AlertDialog.Builder(this)
                     builder.setTitle("모임 종료")
@@ -206,15 +206,11 @@ class GroupDetailActivity : AppCompatActivity() {
                     builder.setNegativeButton("취소", null)
                     builder.show()
                 }
-            } else if (!started && uid != null && item.memberIds.contains(uid)) {
+            } else if (!started && item.status == GroupData.STATUS_RECRUITING && uid != null && item.memberIds.contains(uid)) {
                 binding.btnDeleteGroup.text = "모임 탈퇴"
                 binding.btnDeleteGroup.visibility = View.VISIBLE
-                // 모임 탈퇴 버튼 : 확정된 모임은 나갈 수 없고, 아니면 한 번 더 물어보고 탈퇴
+                // 모임 탈퇴 버튼 (모집 중일 때만)
                 binding.btnDeleteGroup.setOnClickListener {
-                    if (item.status == GroupData.STATUS_CONFIRMED) {
-                        Toast.makeText(baseContext, "확정된 모임은 나갈 수 없어요.", Toast.LENGTH_SHORT).show()
-                        return@setOnClickListener
-                    }
                     val builder = AlertDialog.Builder(this)
                     builder.setTitle("모임 탈퇴")
                     builder.setMessage("모임에서 나갈까요?")
