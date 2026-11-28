@@ -1,59 +1,95 @@
 package com.do_it
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.do_it.databinding.FragmentFriendBinding
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [FriendFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class FriendFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private lateinit var binding: FragmentFriendBinding
+    private lateinit var friendAdapter: friendListAdapter
+    private lateinit var invitationAdapter: friendInvitationListAdapter
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_friend, container, false)
+    ): View {
+        binding = FragmentFriendBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment FriendFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            FriendFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?
+    ) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // 더미 데이터 (친구 데이터가 생기기 전 화면 확인용)
+        val friendList = mutableListOf(
+            userData(
+                id = "u1",
+                email = "daeun@test.com",
+                nickname = "정다은"
+            ),
+            userData(
+                id = "u2",
+                email = "minsu@test.com",
+                nickname = "김민수"
+            )
+        )
+
+        friendAdapter = friendListAdapter(
+            { item ->
+                // 1:1 채팅 화면이 아직 없어서 토스트로 대신
+                Toast.makeText(context, "${item.nickname} 채팅", Toast.LENGTH_SHORT).show()
+            },
+            { item ->
+                // 친구 상세 화면 (아직 없음)
+            },
+            { message -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show() }
+        )
+
+        binding.rvMyFriends.layoutManager =
+            LinearLayoutManager(requireContext())
+        binding.rvMyFriends.adapter = friendAdapter
+
+//        friendAdapter.setItems(friendList)
+/////////////////////////////////////////////////////////////////////////////////
+        // 더미 데이터 (친구 요청이 생기기 전 화면 확인용)
+        val friendInvitationList = mutableListOf(
+            userData(
+                id = "u3",
+                email = "jiho@test.com",
+                nickname = "이지호"
+            ),
+            userData(
+                id = "u4",
+                email = "seoyeon@test.com",
+                nickname = "박서연"
+            )
+        )
+
+        invitationAdapter = friendInvitationListAdapter(
+            { message -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show() }
+        )
+
+        binding.rvFriendInvitations.layoutManager =
+            LinearLayoutManager(requireContext())
+        binding.rvFriendInvitations.adapter = invitationAdapter
+
+//        invitationAdapter.setItems(friendInvitationList)
     }
+
+     //실제 Firestore 데이터를 쓸 때 주석 해제 (켜 두면 빈 목록이 더미 데이터를 덮어씀)
+     override fun onResume() {
+         super.onResume()
+         friendAdapter.loadItems()
+         invitationAdapter.loadItems()
+     }
 }

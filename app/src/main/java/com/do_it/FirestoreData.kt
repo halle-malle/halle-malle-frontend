@@ -9,7 +9,11 @@ data class userData (
     val trustScore:Int= 0,
     val createdAt: Long=0L
 )
-
+data class friendData(
+    val userId: String = "",    // 상대방 uid
+    val status: Int = 0,        // 0 받은 요청, 1 친구
+    val createdAt: Long = 0L
+)
 data class memberData (
     val meetingId:String="",
     val userId:String="",
@@ -43,7 +47,6 @@ data class GroupData(
     val memberCount: Int = 0,
     val maxMember: Int = 0,
     val notice: String = "",
-    val confirmDate: Long = 0L,       // 모집 확정일 (0이면 없음)
     val createdAt: Long = 0L
 ) {
     companion object {
