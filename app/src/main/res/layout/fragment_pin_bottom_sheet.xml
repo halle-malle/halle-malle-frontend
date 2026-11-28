@@ -79,7 +79,7 @@
             <ImageView
                 android:id="@+id/ivHost"
                 android:layout_width="41dp"
-                android:layout_height="45dp"
+                android:layout_height="41dp"
                 android:layout_weight="0"
                 android:layout_marginRight="10dp"
                 android:background="@drawable/bg_avatar"

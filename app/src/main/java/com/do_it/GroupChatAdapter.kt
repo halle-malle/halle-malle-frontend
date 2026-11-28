@@ -5,6 +5,8 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Recycler
+import com.bumptech.glide.Glide
+import com.do_it.MyApplication.Companion.db
 import com.do_it.databinding.GroupChatMineListItemBinding
 import com.do_it.databinding.GroupChatOtherListItemBinding
 import com.do_it.databinding.GroupDetailMemberListItemBinding
@@ -47,6 +49,23 @@ class GroupChatAdapter(
                 holder.binding.tvName.text = item.name
                 holder.binding.tvOtherContent.text = item.content
                 holder.binding.tvTime.text = DateFormat.format("a h:mm", item.createdAt)
+
+                // 보낸 사람 프로필 사진
+                holder.binding.imageView.setImageResource(R.drawable.ic_person)
+                db.collection("users").document(item.senderId).get().addOnSuccessListener {
+                    val user = it.toObject(userData::class.java)
+                    if (user != null) {
+                        // 이미지가 있으면 프로필 사진 표시
+                        if(user.profileImageUrl.isNotBlank()) {
+                            val rqMngr = Glide.with(holder.binding.root)
+                            val rqBuilder = rqMngr.load(user.profileImageUrl)
+                            rqBuilder.placeholder(R.drawable.ic_person)
+                            rqBuilder.error(R.drawable.ic_person)
+                            rqBuilder.override(300, 300)
+                            rqBuilder.into(holder.binding.imageView)
+                        }
+                    }
+                }
             }
         }
     }

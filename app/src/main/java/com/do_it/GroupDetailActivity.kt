@@ -3,6 +3,7 @@ package com.do_it
 import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import android.text.format.DateFormat
 import android.view.View
@@ -31,6 +32,13 @@ class GroupDetailActivity : AppCompatActivity() {
     private lateinit var adapter: detailMemberAdapter
     private val memberList = mutableListOf<memberData>()   // 함께하는 멤버 목록
     private var hostId = ""   // 방장 uid (모임 정보를 불러온 뒤 저장)
+
+    // 모임 수정하고 돌아오면 화면 다시 그리기
+    private val editLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        if (it.resultCode == RESULT_OK) {
+            recreate()
+        }
+    }
 
     override fun onStart() {
         super.onStart()
@@ -375,8 +383,15 @@ class GroupDetailActivity : AppCompatActivity() {
                     builder.show()
                 }
             } else if (!started && item.hostId == uid) {
-                // 모임 확정 버튼 : 모집 중일 때만 보이기
+                // 모임 수정, 모임 확정 버튼 : 모집 중일 때만 보이기
                 if (item.status == GroupData.STATUS_RECRUITING) {
+                    binding.btnEditGroup.visibility = View.VISIBLE
+                    binding.btnEditGroup.setOnClickListener {
+                        val intent = Intent(this, CreateMeetingActivity::class.java)
+                        intent.putExtra("groupId", groupId)
+                        editLauncher.launch(intent)
+                    }
+
                     binding.btnConfirmGroup.visibility = View.VISIBLE
                     binding.btnConfirmGroup.setOnClickListener {
                         val builder = AlertDialog.Builder(this)
@@ -390,6 +405,7 @@ class GroupDetailActivity : AppCompatActivity() {
                                     binding.tvMeetupState.text = "모집 확정"
                                     binding.tvMeetupState.setBackgroundResource(R.drawable.bg_badge_confirmed)
                                     binding.btnConfirmGroup.visibility = View.GONE
+                                    binding.btnEditGroup.visibility = View.GONE
                                 }
                                 confirmTask.addOnFailureListener {
                                     Toast.makeText(baseContext, "확정 실패", Toast.LENGTH_SHORT).show()

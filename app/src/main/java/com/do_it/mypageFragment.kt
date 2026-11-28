@@ -1,5 +1,6 @@
 package com.do_it
 
+import com.bumptech.glide.Glide
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -85,7 +86,15 @@ class mypageFragment : Fragment() {
             currentBinding.tvNickname.text = document.getString("nickname")?.ifBlank { "닉네임" } ?: "닉네임"
             currentBinding.tvIntroduction.text = document.getString("bio") ?: document.getString("intro") ?: ""
             val imageUrl = document.getString("profileImageUrl") ?: document.getString("profileImage") ?: ""
-            ProfileImageLoader.load(currentBinding.imgProfile, imageUrl)
+            // 이미지가 있으면 프로필 사진 표시
+            if(imageUrl.isNotBlank()) {
+                val rqMngr = Glide.with(currentBinding.root)
+                val rqBuilder = rqMngr.load(imageUrl)
+                rqBuilder.placeholder(R.drawable.ic_person)
+                rqBuilder.error(R.drawable.ic_person)
+                rqBuilder.override(300, 300)
+                rqBuilder.into(currentBinding.imgProfile)
+            }
         }
 
         db.collection("groups")
