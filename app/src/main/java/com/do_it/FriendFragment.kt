@@ -1,5 +1,6 @@
 package com.do_it
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -46,8 +47,9 @@ class FriendFragment : Fragment() {
 
         friendAdapter = friendListAdapter(
             { item ->
-                // 1:1 채팅 화면이 아직 없어서 토스트로 대신
-                Toast.makeText(context, "${item.nickname} 채팅", Toast.LENGTH_SHORT).show()
+                val intent: Intent = Intent(requireContext(), PersonalChatActivity::class.java)
+                intent.putExtra("friendId", item.id)
+                startActivity(intent)
             },
             { item ->
                 // 친구 상세 화면 (아직 없음)

@@ -1,0 +1,97 @@
+package com.do_it
+
+import android.os.Bundle
+import android.view.View
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.do_it.MyApplication.Companion.auth
+import com.do_it.MyApplication.Companion.db
+import com.do_it.databinding.ActivityPersonalChatBinding
+
+class PersonalChatActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+
+
+        val binding = ActivityPersonalChatBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        val pIntent = getIntent()
+        val friendId = pIntent.getStringExtra("friendId")   // 넘겨받은 친구 uid
+        val myId = auth.currentUser?.uid
+        if (friendId == null || myId == null) {
+            finish()
+            return
+        }
+
+        // 채팅방 id : 두 사람 uid를 정렬해서 붙임 (누가 먼저 열어도 같은 방)
+        val roomId = listOf(myId, friendId).sorted().joinToString("_")
+
+        binding.bckBtnFrmGroupChat.setOnClickListener{
+            finish()
+        }
+
+        // 채팅방 제목 : 상대방 이름 (닉네임이 없으면 이메일 @ 앞부분)
+        db.collection("users").document(friendId).get().addOnSuccessListener {
+            val friend = it.toObject(userData::class.java)
+            if (friend != null) {
+                binding.textView2.text = if (friend.nickname.isEmpty()) friend.email.substringBefore("@") else friend.nickname
+            }
+        }
+
+        // 메시지에 같이 저장할 내 이름 (닉네임이 없으면 이메일 @ 앞부분)
+        var myName = auth.currentUser?.email?.substringBefore("@") ?: ""   // users에 정보가 없을 때를 대비한 기본값
+        db.collection("users").document(myId).get().addOnSuccessListener {
+            val user = it.toObject(userData::class.java)
+            if (user != null) {
+                myName = if (user.nickname.isEmpty()) user.email.substringBefore("@") else user.nickname
+            }
+        }
+
+        val chatList = mutableListOf<chatData>()
+        val adapter = GroupChatAdapter(chatList, myId)
+
+        binding.rvChat.layoutManager = LinearLayoutManager(this)
+        binding.rvChat.adapter = adapter
+
+        // 메시지는 personalChats/채팅방id/chats 에 저장
+        val chatRef = db.collection("personalChats").document(roomId).collection("chats")
+
+        binding.btnSend.setOnClickListener(object:View.OnClickListener {
+            override fun onClick(v: View?) {
+                if(binding.editTextText.text.toString().trim().isEmpty()) return
+
+                chatRef.add(chatData(
+                    groupId = roomId,   // 개인 채팅에서는 채팅방 id
+                    senderId = myId,
+                    createdAt = System.currentTimeMillis(),
+                    name = myName,
+                    content = binding.editTextText.text.toString().trim()
+                ))
+                binding.editTextText.setText("")
+            }
+        })
+
+        // 새 메시지가 올라올 때마다 목록 다시 보여주기 (보낸 시간 순서)
+        chatRef.orderBy("createdAt").addSnapshotListener(this) { value, error ->
+            if (value == null) return@addSnapshotListener
+
+            chatList.clear()
+            for (document in value) {
+                chatList.add(document.toObject(chatData::class.java))
+            }
+            adapter.notifyDataSetChanged()
+            binding.rvChat.scrollToPosition(chatList.size - 1)   // 맨 아래로
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
+    }
+}
