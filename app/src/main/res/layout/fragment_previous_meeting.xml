@@ -1,14 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@color/white" android:orientation="vertical" android:padding="20dp"
     tools:context=".Previous_meetingFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
-
-</FrameLayout>
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="참여했던 모임" android:textColor="#222222" android:textSize="20sp" android:textStyle="bold" />
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="8dp" android:text="지난 모임을 누르면 상세 내용을 볼 수 있어요."
+        android:textColor="#777777" android:textSize="13sp" />
+    <TextView android:id="@+id/tvMeetingCount" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="20dp" android:text="불러오는 중" android:textColor="#777777" android:textSize="13sp" />
+    <ProgressBar android:id="@+id/progressLoading" android:layout_width="40dp" android:layout_height="40dp"
+        android:layout_gravity="center_horizontal" android:layout_marginTop="24dp" />
+    <TextView android:id="@+id/tvListStatus" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="32dp" android:gravity="center" android:textColor="#777777"
+        android:textSize="14sp" android:visibility="gone" />
+    <Button android:id="@+id/buttonRetry" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal" android:layout_marginTop="12dp"
+        android:text="다시 불러오기" android:visibility="gone" />
+    <androidx.recyclerview.widget.RecyclerView android:id="@+id/rvPastMeetings"
+        android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+        android:layout_marginTop="8dp" android:clipToPadding="false" android:paddingBottom="16dp"
+        tools:listitem="@layout/schedule_list_item" />
+</LinearLayout>

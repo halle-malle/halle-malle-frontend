@@ -23,9 +23,6 @@
             android:id="@+id/action_my_to_friendFragment"
             app:destination="@id/friendFragment" />
         <action
-            android:id="@+id/action_my_to_group_ManagementFragment"
-            app:destination="@id/group_ManagementFragment" />
-        <action
             android:id="@+id/action_my_to_previous_meetingFragment"
             app:destination="@id/previous_meetingFragment" />
         <action
@@ -38,11 +35,6 @@
         android:label="친구"
         tools:layout="@layout/fragment_friend" />
     <fragment
-        android:id="@+id/group_ManagementFragment"
-        android:name="com.do_it.Group_ManagementFragment"
-        android:label="내가 연 모임 관리"
-        tools:layout="@layout/fragment_group__management" />
-    <fragment
         android:id="@+id/previous_meetingFragment"
         android:name="com.do_it.Previous_meetingFragment"
         android:label="지난 모임"
@@ -52,4 +44,10 @@
         android:name="com.do_it.Notification_SettingsFragment"
         android:label="알림 설정"
         tools:layout="@layout/fragment_notification__settings" />
+    <fragment android:id="@+id/editProfileFragment" android:name="com.do_it.EditProfileFragment"
+        android:label="프로필 수정" tools:layout="@layout/fragment_edit_profile" />
+    <fragment android:id="@+id/appInfoFragment" android:name="com.do_it.AppInfoFragment"
+        android:label="앱 정보" tools:layout="@layout/fragment_app_info">
+        <argument android:name="page" app:argType="string" android:defaultValue="terms" />
+    </fragment>
 </navigation>

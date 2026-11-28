@@ -52,6 +52,8 @@ class listAdapter(
         holder.binding.tvStatus.text = when(item.status) {
                 GroupData.STATUS_RECRUITING -> "모집 중"
                 GroupData.STATUS_CONFIRMED -> "확정"
+                GroupData.STATUS_CANCELED -> "취소"
+                GroupData.STATUS_FINISHED -> "종료"
                 else -> "에러"
         }
         holder.itemView.setOnClickListener{
