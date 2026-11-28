@@ -16,14 +16,12 @@
         android:paddingTop="64dp"
         android:paddingBottom="20dp">
 
-        <!-- 앱 이름 -->
-        <TextView
+        <!-- 앱 로고 -->
+        <ImageView
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="할래말래?"
-            android:textColor="#666666"
-            android:textSize="26sp"
-            android:textStyle="bold" />
+            android:layout_height="44dp"
+            android:adjustViewBounds="true"
+            android:src="@drawable/hallemalle_small" />
 
         <!-- 로그인 제목 -->
         <TextView

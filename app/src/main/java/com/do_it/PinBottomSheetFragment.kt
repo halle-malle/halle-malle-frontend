@@ -105,7 +105,15 @@ class PinBottomSheetFragment : BottomSheetDialogFragment() {
 
     // 모임 정보를 화면에 보여줌
     private fun showGroup(item: GroupData) {
-        binding.tvTitle.text = item.title
+        // 카테고리 이모지 모임 이름 앞에 붙이기
+        val emoji = when (item.category) {
+            "운동" -> "🏸"
+            "스터디" -> "💻"
+            "맛집" -> "🍕"
+            "취미" -> "🎸"
+            else -> "💬"
+        }
+        binding.tvTitle.text = emoji + " " + item.title
         binding.tvMemberCount.text = "${item.memberCount}/${item.maxMember}명"
 
         // 이미 참여 중이면 버튼 글자 바꾸기

@@ -137,7 +137,15 @@ class GroupDetailActivity : AppCompatActivity() {
             val item = it.toObject(GroupData::class.java)
             if (item == null) return@addOnSuccessListener
 
-            binding.tvGroupName.text = item.title
+            // 카테고리 이모지 모임 이름 앞에 붙이기
+            val emoji = when (item.category) {
+                "운동" -> "🏸"
+                "스터디" -> "💻"
+                "맛집" -> "🍕"
+                "취미" -> "🎸"
+                else -> "💬"
+            }
+            binding.tvGroupName.text = emoji + " " + item.title
             binding.tvCategory.text = if (item.category.isEmpty()) "기타" else item.category
             // 모집 상태
             val started = item.dateTime < System.currentTimeMillis()

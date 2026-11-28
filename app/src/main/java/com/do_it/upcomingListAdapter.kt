@@ -58,9 +58,16 @@ class upcomingListAdapter (
         }
 
         holder.binding.tvPlace.text = item.place
-        holder.binding.tvTitle.text = item.title
+        // 카테고리 이모지 모임 이름 앞에 붙이기
+        val emoji = when (item.category) {
+            "운동" -> "🏸"
+            "스터디" -> "💻"
+            "맛집" -> "🍕"
+            "취미" -> "🎸"
+            else -> "💬"
+        }
+        holder.binding.tvTitle.text = emoji + " " + item.title
         holder.binding.tvNotice.text = "멤버 ${item.memberCount}/${item.maxMember}명"
-        holder.binding.btnChat.text = "그룹 채팅"
         holder.binding.btnDetail.text = "모임 상세"
         holder.binding.btnChat.setOnClickListener {
             onItemClickChat(item)
