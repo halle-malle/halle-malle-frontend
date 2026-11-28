@@ -17,12 +17,12 @@ import androidx.navigation.fragment.findNavController
 import com.do_it.MyApplication.Companion.auth
 import com.do_it.MyApplication.Companion.db
 import com.do_it.databinding.FragmentMypageBinding
-import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Filter
 
 class mypageFragment : Fragment() {
     private var _binding: FragmentMypageBinding? = null
     private val binding get() = _binding!!
-    private val listeners = mutableListOf<ListenerRegistration>()
+    private var requestNumber = 0
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentMypageBinding.inflate(inflater, container, false)
         return binding.root
@@ -66,30 +66,62 @@ class mypageFragment : Fragment() {
     override fun onStart() {
         super.onStart()
         val uid = auth.currentUser?.uid ?: return
-        listeners += db.collection("users").document(uid).addSnapshotListener { document, error ->
-            val b = _binding ?: return@addSnapshotListener
-            if (error != null) {
+        val currentBinding = binding
+        val request = ++requestNumber
+
+        val userDocument = db.collection("users").document(uid)
+        userDocument.get().addOnCompleteListener { task ->
+            if (request != requestNumber || auth.currentUser?.uid != uid) {
+                return@addOnCompleteListener
+            }
+            if (!task.isSuccessful) {
                 toast("프로필을 불러오지 못했어요. 네트워크를 확인해주세요.")
-                return@addSnapshotListener
+                return@addOnCompleteListener
             }
-            if (document == null || !document.exists()) return@addSnapshotListener
-            b.tvNickname.text = document.getString("nickname")?.ifBlank { "닉네임" } ?: "닉네임"
-            b.tvIntroduction.text = document.getString("bio") ?: document.getString("intro") ?: ""
-            ProfileImageLoader.load(b.imgProfile,
-                document.getString("profileImageUrl") ?: document.getString("profileImage") ?: "")
+
+            val document = task.result
+            if (!document.exists()) return@addOnCompleteListener
+
+            currentBinding.tvNickname.text = document.getString("nickname")?.ifBlank { "닉네임" } ?: "닉네임"
+            currentBinding.tvIntroduction.text = document.getString("bio") ?: document.getString("intro") ?: ""
+            val imageUrl = document.getString("profileImageUrl") ?: document.getString("profileImage") ?: ""
+            ProfileImageLoader.load(currentBinding.imgProfile, imageUrl)
         }
-        listeners += db.collection("groups").whereArrayContains("memberIds", uid)
-            .addSnapshotListener { snapshot, error ->
-                val b = _binding ?: return@addSnapshotListener
-                if (error == null && snapshot != null) b.tvJoinedCount.text = snapshot.documents.count {
+
+        db.collection("groups")
+            .where(Filter.or(
+                Filter.arrayContains("memberIds", uid),
+                Filter.equalTo("hostId", uid)
+            ))
+            .get()
+            .addOnCompleteListener { task ->
+                if (request != requestNumber || auth.currentUser?.uid != uid) {
+                    return@addOnCompleteListener
+                }
+                if (!task.isSuccessful) {
+                    currentBinding.tvTotalCount.text = "-"
+                    currentBinding.tvCreatedCount.text = "-"
+                    return@addOnCompleteListener
+                }
+
+                val meetings = task.result.documents.filter {
                     it.getLong("status")?.toInt() != GroupData.STATUS_CANCELED
+                }
+                currentBinding.tvTotalCount.text = meetings.size.toString()
+                currentBinding.tvCreatedCount.text = meetings.count {
+                    it.getString("hostId") == uid
                 }.toString()
-                else b.tvJoinedCount.text = "-"
             }
-        listeners += db.collection("groups").whereEqualTo("hostId", uid)
-            .addSnapshotListener { snapshot, error ->
-                val b = _binding ?: return@addSnapshotListener
-                b.tvCreatedCount.text = if (error == null && snapshot != null) snapshot.size().toString() else "-"
+
+        userDocument.collection("friends")
+            .whereEqualTo("status", 1)
+            .get()
+            .addOnCompleteListener { task ->
+                if (request != requestNumber || auth.currentUser?.uid != uid) {
+                    return@addOnCompleteListener
+                }
+                currentBinding.tvFriendCount.text =
+                    if (task.isSuccessful) task.result.size().toString() else "-"
             }
     }
 
@@ -115,8 +147,7 @@ class mypageFragment : Fragment() {
     }
 
     override fun onStop() {
-        listeners.forEach { it.remove() }
-        listeners.clear()
+        requestNumber++
         super.onStop()
     }
 
