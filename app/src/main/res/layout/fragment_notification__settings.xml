@@ -1,29 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent" android:background="#FBF8EF">
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:padding="20dp" android:orientation="vertical">
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="알림 설정"
-            android:textSize="20sp" android:textColor="#222222" android:textStyle="bold" />
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="8dp" android:layout_marginBottom="16dp" android:text="알림 종류별 수신 설정을 저장해요."
-            android:textSize="13sp" android:textColor="#777777" />
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/switchPush"
-            android:layout_width="match_parent" android:layout_height="64dp"
-            android:text="푸시알림" android:textSize="16sp" android:textStyle="bold" android:textColor="#222222" />
-        <TextView android:id="@+id/tvPushStatus" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp" android:textSize="13sp" android:textColor="#777777" />
-        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E5E5EA" />
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="24dp" android:text="받을 알림 종류" android:textStyle="bold"
-            android:textSize="14sp" android:textColor="#222222" />
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/switchMeeting" android:layout_width="match_parent"
-            android:layout_height="64dp" android:text="모임 일정 · 변경" android:textColor="#222222" />
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/switchFriend" android:layout_width="match_parent"
-            android:layout_height="64dp" android:text="친구 요청" android:textColor="#222222" />
-        <androidx.appcompat.widget.SwitchCompat android:id="@+id/switchChat" android:layout_width="match_parent"
-            android:layout_height="64dp" android:text="채팅 메시지" android:textColor="#222222" />
-        <Button android:id="@+id/buttonSystemNotifications" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:layout_marginTop="24dp" android:text="휴대폰 알림 설정 열기" />
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FBF8EF">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="20dp"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="알림 설정"
+            android:textSize="20sp"
+            android:textColor="#222222"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            android:text="알림 종류별 수신 설정을 저장해요."
+            android:textSize="13sp"
+            android:textColor="#777777" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchPush"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:text="푸시알림"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#222222" />
+
+        <TextView
+            android:id="@+id/tvPushStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:textSize="13sp"
+            android:textColor="#777777" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#E5E5EA" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="받을 알림 종류"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:textColor="#222222" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchMeeting"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:text="모임 일정 · 변경"
+            android:textColor="#222222" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchFriend"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:text="친구 요청"
+            android:textColor="#222222" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchChat"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:text="채팅 메시지"
+            android:textColor="#222222" />
+
+        <Button
+            android:id="@+id/buttonSystemNotifications"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="휴대폰 알림 설정 열기" />
     </LinearLayout>
 </ScrollView>
