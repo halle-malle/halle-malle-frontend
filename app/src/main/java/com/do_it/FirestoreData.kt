@@ -41,6 +41,7 @@ data class GroupData(
     val description: String = "",     // 상세 설명
     val dateTime: Long = 0L,          // 모임 일시
     val place: String = "",
+    val address: String = "",         // 주소 (검색용)
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
     val status: Int = 0,              // 0 모집중, 1 확정, 2 취소, 3 종료
@@ -54,6 +55,7 @@ data class GroupData(
         const val STATUS_CONFIRMED = 1   // 확정
         const val STATUS_CANCELED = 2    // 취소
         const val STATUS_FINISHED = 3    // 종료
+        const val END_TIME = 24 * 60 * 60 * 1000L   // 시작 후 하루 지나면 지난 모임
     }
 }
 

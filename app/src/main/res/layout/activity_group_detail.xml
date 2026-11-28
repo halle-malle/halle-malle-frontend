@@ -85,16 +85,8 @@
                 android:layout_marginRight="7dp"
                 android:padding="3dp"
                 android:background="@drawable/bg_status_card_white"
-                android:text="모임 확정" />
+                android:text="모집 확정" />
 
-            <TextView
-                android:id="@+id/tv_my_state"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginRight="7dp"
-                android:padding="3dp"
-                android:background="@drawable/bg_status_card_white"
-                android:text="참여 중" />
         </LinearLayout>
 
         <TextView
@@ -260,6 +252,19 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1" />
+
+        <!-- 모임 확정 버튼 (방장이고 모집 중일 때만 보임) -->
+        <Button
+            android:id="@+id/btnConfirmGroup"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_status_card_black"
+            android:text="모임 확정"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
 
         <!-- 하단 버튼 (방장: 모임 삭제 / 참여자: 모임 탈퇴, 코드에서 글자 바꿈) -->
         <Button

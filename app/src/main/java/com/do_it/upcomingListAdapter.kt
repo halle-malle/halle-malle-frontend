@@ -19,7 +19,8 @@ class upcomingItemViewHolder(
 class upcomingListAdapter (
     private val onItemClickChat: (GroupData) -> Unit,
     private val onItemClickDetail: (GroupData) -> Unit,
-    private val toast: (String) -> Unit // 어답터 클래스 안에서 토스트 창을 띄워야 할 때 호출하는 함수
+    private val toast: (String) -> Unit, // 어답터 클래스 안에서 토스트 창을 띄워야 할 때 호출하는 함수
+    private val onLoaded: (Int) -> Unit // 다 불러오면 모임 개수를 알려주는 함수
 
 ) : RecyclerView.Adapter<upcomingItemViewHolder>() {
 
@@ -41,7 +42,19 @@ class upcomingListAdapter (
     ) {
         val item = list[position]
 
-        holder.binding.tvPlace.text = "${DateFormat.format("MM.dd (E) HH:mm", item.dateTime)}|${item.place}"
+        // 모임 일시
+        holder.binding.tvDday.text = DateFormat.format("MM.dd (E) HH:mm", item.dateTime)
+
+        // 모집 상태
+        if (item.dateTime < System.currentTimeMillis()) {
+            holder.binding.tvConfirmed.text = "모임 중"
+        } else if (item.status == GroupData.STATUS_CONFIRMED) {
+            holder.binding.tvConfirmed.text = "모집 확정"
+        } else {
+            holder.binding.tvConfirmed.text = "모집 중"
+        }
+
+        holder.binding.tvPlace.text = item.place
         holder.binding.tvTitle.text = item.title
         holder.binding.tvNotice.text = "멤버 ${item.memberCount}/${item.maxMember}명"
         holder.binding.btnChat.text = "그룹 채팅"
@@ -58,7 +71,7 @@ class upcomingListAdapter (
         return list.size
     }
     fun loadItems() {
-        // 내가 참여한 모임 중 모집중(0), 확정(1)이고 아직 안 지난 것을 가까운 순으로
+        // 내가 참여한 모임 중 모집중(0), 확정(1)인 것을 가까운 순으로
         val uid = auth.currentUser?.uid ?: return
         val colref: CollectionReference = db.collection("groups")
 
@@ -66,16 +79,16 @@ class upcomingListAdapter (
             .whereIn("status", listOf(0, 1))
         val task = query.get()
         task.addOnSuccessListener {
-            val now = System.currentTimeMillis()
             val dbList = mutableListOf<GroupData>()
             for (document in it) {
                 val item = document.toObject(GroupData::class.java)
-                if (item.dateTime < now) continue   // 지난 모임 건너뛰기
+                if (item.dateTime + GroupData.END_TIME < System.currentTimeMillis()) continue   // 하루 지난 모임 건너뛰기
                 dbList.add(item)
             }
             dbList.sortBy { it.dateTime }   // 날짜 가까운 순
             list = dbList
             notifyDataSetChanged()
+            onLoaded(list.size)
         }
         task.addOnFailureListener {
             toast("읽기 실패")
