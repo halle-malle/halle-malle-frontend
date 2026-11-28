@@ -79,7 +79,7 @@ class Previous_meetingFragment : Fragment() {
                     val item = document.toObject(GroupData::class.java).copy(id = document.id)
                     if (item.status == GroupData.STATUS_CANCELED) continue
                     if (item.status == GroupData.STATUS_FINISHED || (item.dateTime > 0L && item.dateTime < now)) {
-                        meetings.add(item)
+                        meetings.add(item.copy(status = GroupData.STATUS_FINISHED))
                     }
                 }
                 meetings.sortByDescending { it.dateTime }
